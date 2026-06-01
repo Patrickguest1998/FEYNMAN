@@ -124,6 +124,30 @@
   }
   #shortcut-list { font-size: 10px; color: #404060; line-height: 1.9; }
   .prop-section { border-top: 1px solid #1c1c34; padding-top: 8px; margin-top: 2px; }
+  /* ── Component Inspector ── */
+  .insp-header { font-size:11px; font-weight:bold; letter-spacing:1px; text-transform:uppercase;
+    padding:5px 8px; border-radius:3px; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+  .insp-vertex  { background:#121828; border:1px solid #2a4060; color:#70a8e0; }
+  .insp-fermion { background:#121820; border:1px solid #304060; color:#80c8ff; }
+  .insp-photon  { background:#1a1808; border:1px solid #504010; color:#ffd060; }
+  .insp-gluon   { background:#0c1a0c; border:1px solid #205020; color:#80ff90; }
+  .insp-scalar  { background:#160c1a; border:1px solid #4a2060; color:#c080ff; }
+  .insp-ghost   { background:#1a0c0c; border:1px solid #602020; color:#ff9060; }
+  .insp-multi   { background:#101028; border:1px solid #303060; color:#8090c0; }
+  .insp-none    { background:#0c0c18; border:1px solid #202040; color:#404060; }
+  .insp-dot     { width:8px; height:8px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  .insp-section { margin-top:10px; }
+  .insp-section-lbl { font-size:9px; color:#303055; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:4px; }
+  .insp-readout { background:#07070f; border:1px solid #141430; border-radius:3px;
+    padding:6px 8px; font-size:11px; color:#5060a0; line-height:1.9; margin:4px 0; }
+  .insp-readout .hl { color:#8090c0; }
+  .insp-readout .rule-text { color:#a090d0; font-size:11px; }
+  .insp-conn-item { font-size:11px; color:#404868; padding:2px 0; display:flex; gap:6px; align-items:center; }
+  .insp-conn-dot  { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+  .insp-badge { display:inline-block; padding:1px 6px; border-radius:2px; font-size:10px; margin-left:4px; }
+  .insp-badge-ext  { background:#102018; border:1px solid #205030; color:#50a060; }
+  .insp-badge-int  { background:#181020; border:1px solid #402860; color:#9060b0; }
+  .insp-badge-none { background:#101018; border:1px solid #202040; color:#404868; }
   /* ── Feynman Rules panel ── */
   #rules-panel {
     border-top: 1px solid #2a2a44;
@@ -251,48 +275,106 @@
   </div>
 
   <div id="props">
-    <div class="section-label">Selection</div>
-    <div id="no-sel" style="color:#40405a;font-size:11px;">Nothing selected</div>
 
+    <!-- Nothing selected -->
+    <div id="no-sel">
+      <div class="insp-header insp-none"><span class="insp-dot"></span>Nothing selected</div>
+      <div style="font-size:10px;color:#252545;line-height:1.9;margin-top:4px">
+        Click a vertex or line<br>to inspect its properties
+      </div>
+    </div>
+
+    <!-- ── Vertex inspector ────────────────────────────────────── -->
     <div id="vert-props" style="display:none">
-      <div class="prop-section">
-        <label>Label</label>
-        <input type="text" id="vp-label" placeholder="e.g. p, e⁻, γ">
-        <div style="margin-top:6px;">
-          <label>Style</label>
-          <select id="vp-style">
-            <option value="dot">Dot</option>
-            <option value="cross">Cross</option>
-            <option value="circle">Circle</option>
-            <option value="blob">Blob</option>
-            <option value="none">Invisible</option>
-          </select>
-        </div>
-        <div style="margin-top:8px;">
-          <button id="btn-save-tmpl" style="width:100%;font-size:11px;">Save as Template</button>
-        </div>
+      <div class="insp-header insp-vertex"><span class="insp-dot"></span><span id="vp-type-lbl">Vertex</span></div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Label</div>
+        <input type="text" id="vp-label" placeholder="e.g. e, q, Zf, lW">
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Style</div>
+        <select id="vp-style">
+          <option value="dot">● Dot</option>
+          <option value="cross">✕ Cross</option>
+          <option value="circle">○ Circle</option>
+          <option value="blob">◉ Blob</option>
+          <option value="none">Invisible (external leg)</option>
+        </select>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Feynman Rule</div>
+        <div id="vp-rule" class="insp-readout"></div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Connected Lines</div>
+        <div id="vp-conns" class="insp-readout" style="padding:4px 8px"></div>
+      </div>
+
+      <div class="insp-section">
+        <button id="btn-save-tmpl" style="width:100%;font-size:11px;margin-top:2px">Save as Template</button>
       </div>
     </div>
 
+    <!-- ── Edge inspector ─────────────────────────────────────── -->
     <div id="edge-props" style="display:none">
-      <div class="prop-section">
-        <label>Label</label>
-        <input type="text" id="ep-label" placeholder="e.g. k, q, m">
-        <div style="margin-top:6px;">
-          <label>Type</label>
-          <select id="ep-type">
-            <option value="fermion">Fermion</option>
-            <option value="photon">Photon</option>
-            <option value="gluon">Gluon</option>
-            <option value="scalar">Scalar</option>
-            <option value="ghost">Ghost</option>
-          </select>
-        </div>
-        <div style="margin-top:6px;" class="check-row">
-          <input type="checkbox" id="ep-rev"> Reverse arrow
-        </div>
+      <div class="insp-header insp-fermion" id="ep-header"><span class="insp-dot"></span><span id="ep-type-lbl">Line</span></div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Momentum label</div>
+        <input type="text" id="ep-label" placeholder="e.g. p₁, k, q">
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Particle type</div>
+        <select id="ep-type">
+          <option value="fermion">Fermion</option>
+          <option value="photon">Photon / W / Z</option>
+          <option value="gluon">Gluon</option>
+          <option value="scalar">Scalar / Higgs</option>
+          <option value="ghost">Ghost</option>
+        </select>
+      </div>
+
+      <div class="insp-section">
+        <label class="check-row"><input type="checkbox" id="ep-rev">
+          <span style="margin-left:5px">Reverse arrow <span style="color:#404060;font-size:10px">(marks antiparticle)</span></span>
+        </label>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Status</div>
+        <div id="ep-status" class="insp-readout"></div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Amplitude factor</div>
+        <div id="ep-factor" class="insp-readout"></div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-section-lbl">Connects</div>
+        <div id="ep-connects" class="insp-readout"></div>
+      </div>
+
+      <div class="insp-section" id="ep-curve-row">
+        <div class="insp-section-lbl">Curvature <span id="ep-curve-vals" style="color:#303058;font-weight:normal"></span></div>
+        <button id="btn-reset-curve" style="width:100%;font-size:11px">Reset curve</button>
       </div>
     </div>
+
+    <!-- ── Multi-select ────────────────────────────────────────── -->
+    <div id="multi-props" style="display:none">
+      <div class="insp-header insp-multi"><span class="insp-dot"></span><span id="mp-count">N selected</span></div>
+      <div class="insp-section">
+        <div class="insp-section-lbl">Items</div>
+        <div id="mp-list" class="insp-readout" style="max-height:120px;overflow-y:auto"></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1654,26 +1736,180 @@ document.addEventListener('keydown', e => {
   if (t) setTool(t);
 });
 
-// ─── Property Panel ──────────────────────────────────────────────────────────
-function updateProps() {
-  const noSel  = document.getElementById('no-sel');
-  const vProps = document.getElementById('vert-props');
-  const eProps = document.getElementById('edge-props');
+// ─── Property Inspector ───────────────────────────────────────────────────────
 
+const TYPE_COLORS = {
+  fermion:'#80c8ff', photon:'#ffd060', gluon:'#80ff90',
+  scalar:'#c080ff', ghost:'#ff9060', vertex:'#70a8e0'
+};
+
+function vertexRuleMatch(v) {
+  // Returns the matching Feynman rule for this vertex (same logic as buildAmplitude)
+  const sig = {};
+  edges.forEach(e => {
+    if (isLoop(e) && e.from===v.id)          { sig[e.type]=(sig[e.type]||0)+2; }
+    else if (e.from===v.id || e.to===v.id)   { sig[e.type]=(sig[e.type]||0)+1; }
+  });
+  const sigMatch = (rs,vs) => {
+    const rk=Object.keys(rs||{}), vk=Object.keys(vs);
+    return rk.length===vk.length && rk.every(k=>rs[k]===vs[k]);
+  };
+  const byLabel = feynmanRules.vertices.find(r=>r.label&&r.label===v.label);
+  const bySig   = !byLabel && feynmanRules.vertices.find(r=>sigMatch(r.sig,sig));
+  return byLabel || bySig || null;
+}
+
+function edgeSpinorLabel(e) {
+  // Returns what spinor/external factor this edge will produce in the amplitude
+  const fromIsExt = isExtV(vertById(e.from));
+  let dirKey;
+  if (e.type==='fermion'||e.type==='ghost') {
+    if (e.reversed) dirKey = e.type+(fromIsExt?'_anti_out':'_anti_in');
+    else            dirKey = e.type+(fromIsExt?'_in':'_out');
+  } else { dirKey = e.type+'_in'; }
+  const er = feynmanRules.external[dirKey] || feynmanRules.external[e.type+'_in'];
+  return er ? er.text.replace(/{p}/g, e.label||'p') : null;
+}
+
+function edgeIsExternal(e) {
+  return isExtV(vertById(e.from)) || isExtV(vertById(e.to));
+}
+
+function vertLabel(id) {
+  const v = vertById(id);
+  if (!v) return '?';
+  return v.label ? `"${v.label}"` : `(${v.style||'dot'})`;
+}
+
+function updateProps() {
+  const show = id => document.getElementById(id).style.display='block';
+  const hide = id => document.getElementById(id).style.display='none';
+  ['no-sel','vert-props','edge-props','multi-props'].forEach(hide);
+
+  // ── Multi-select ──────────────────────────────────────────────────────────
+  if (selVerts.size > 1) {
+    show('multi-props');
+    document.getElementById('mp-count').textContent = `${selVerts.size} vertices selected`;
+    const items = [...selVerts].map(id => {
+      const v = vertById(id);
+      const lbl = v.label ? `"${v.label}"` : '(unlabelled)';
+      const deg = edges.filter(e=>e.from===id||e.to===id).length;
+      return `<div class="insp-conn-item">
+        <span class="insp-conn-dot" style="background:${TYPE_COLORS.vertex}"></span>
+        ${lbl} &nbsp;<span style="color:#303058">${deg} line${deg!==1?'s':''}</span></div>`;
+    }).join('');
+    document.getElementById('mp-list').innerHTML = items;
+    return;
+  }
+
+  // ── Single vertex ─────────────────────────────────────────────────────────
   if (selVert !== null) {
     const v = vertById(selVert);
-    noSel.style.display='none'; vProps.style.display='block'; eProps.style.display='none';
+    if (!v) return;
+    show('vert-props');
     document.getElementById('vp-label').value = v.label||'';
     document.getElementById('vp-style').value = v.style||'dot';
-  } else if (selEdge !== null) {
+    document.getElementById('vp-type-lbl').textContent =
+      v.style==='none' ? 'External Leg' : 'Interaction Vertex';
+
+    // Feynman rule readout
+    const rule = vertexRuleMatch(v);
+    const ruleEl = document.getElementById('vp-rule');
+    if (rule) {
+      ruleEl.innerHTML = `<span class="rule-text">${rule.text}</span><br>
+        <span style="color:#303050">matched by ${v.label&&rule.label===v.label?'label "'+rule.label+'"':'signature'}</span>`;
+    } else if (v.style==='none') {
+      ruleEl.innerHTML = `<span style="color:#303050">External leg — spinor assigned when connected to internal vertex</span>`;
+    } else {
+      ruleEl.innerHTML = `<span style="color:#604040">No matching rule — add one in the Rules panel, or label this vertex</span>`;
+    }
+
+    // Connected lines
+    const conn = edges.filter(e=>e.from===v.id||e.to===v.id);
+    const connEl = document.getElementById('vp-conns');
+    if (!conn.length) {
+      connEl.innerHTML = '<span style="color:#303050">No lines connected</span>';
+    } else {
+      connEl.innerHTML = conn.map(e => {
+        const isExt = edgeIsExternal(e);
+        const otherV = vertById(e.from===v.id ? e.to : e.from);
+        const otherLbl = otherV ? (otherV.label||'—') : '?';
+        const col = TYPE_COLORS[e.type]||'#aaa';
+        const badge = isExt
+          ? `<span class="insp-badge insp-badge-ext">ext</span>`
+          : `<span class="insp-badge insp-badge-int">prop</span>`;
+        return `<div class="insp-conn-item">
+          <span class="insp-conn-dot" style="background:${col}"></span>
+          <span class="hl">${e.type}</span>${e.label?` <span style="color:#404060">${e.label}</span>`:''}
+          → <span style="color:#404060">${otherLbl}</span>${badge}</div>`;
+      }).join('');
+    }
+    return;
+  }
+
+  // ── Single edge ───────────────────────────────────────────────────────────
+  if (selEdge !== null) {
     const ed = edgeById(selEdge);
-    noSel.style.display='none'; vProps.style.display='none'; eProps.style.display='block';
+    if (!ed) return;
+    show('edge-props');
+
     document.getElementById('ep-label').value = ed.label||'';
     document.getElementById('ep-type').value  = ed.type;
     document.getElementById('ep-rev').checked = !!ed.reversed;
-  } else {
-    noSel.style.display='block'; vProps.style.display='none'; eProps.style.display='none';
+
+    // Header colour
+    const col = TYPE_COLORS[ed.type]||'#aaa';
+    const hdr = document.getElementById('ep-header');
+    hdr.className = `insp-header insp-${ed.type}`;
+    hdr.querySelector('.insp-dot').style.background = col;
+    const extFlag = edgeIsExternal(ed);
+    document.getElementById('ep-type-lbl').textContent =
+      ed.type.charAt(0).toUpperCase()+ed.type.slice(1)+(extFlag?' — External':'');
+
+    // Status
+    const statusEl = document.getElementById('ep-status');
+    if (isLoop(ed)) {
+      statusEl.innerHTML = `<span class="insp-badge insp-badge-int">self-loop</span> Internal propagator`;
+    } else if (extFlag) {
+      statusEl.innerHTML = `<span class="insp-badge insp-badge-ext">external</span> External leg`;
+    } else {
+      statusEl.innerHTML = `<span class="insp-badge insp-badge-int">internal</span> Propagator`;
+    }
+
+    // Amplitude factor
+    const factEl = document.getElementById('ep-factor');
+    if (extFlag) {
+      const spinor = edgeSpinorLabel(ed);
+      factEl.innerHTML = spinor
+        ? `<span class="rule-text">${spinor}</span><br><span style="color:#303050">external state factor</span>`
+        : '<span style="color:#303050">—</span>';
+    } else {
+      const pr = feynmanRules.propagators[ed.type];
+      const mom = ed.label ? pr?.text?.replace(/{p}/g,ed.label).replace(/{p2}/g,`(${ed.label})²`) : pr?.text;
+      factEl.innerHTML = mom
+        ? `<span class="rule-text">${mom}</span><br><span style="color:#303050">${ed.type} propagator</span>`
+        : '<span style="color:#303050">no propagator rule set</span>';
+    }
+
+    // Connects
+    const fromV = vertById(ed.from), toV = vertById(ed.to);
+    const fLbl = fromV ? (fromV.label||`(${fromV.style})`) : '?';
+    const tLbl = toV   ? (toV.label  ||`(${toV.style})`)   : '?';
+    const arrow = ed.reversed ? '←' : '→';
+    document.getElementById('ep-connects').innerHTML =
+      `<span class="hl">${fLbl}</span> ${arrow} <span class="hl">${tLbl}</span>
+      <br><span style="color:#303050">vertex ids: ${ed.from} → ${ed.to}</span>`;
+
+    // Curvature
+    const cx=Math.round(ed.cx||0), cy=Math.round(ed.cy||0);
+    document.getElementById('ep-curve-vals').textContent = `cx=${cx} cy=${cy}`;
+    document.getElementById('ep-curve-row').style.display =
+      (cx!==0||cy!==0||!isLoop(ed)) ? 'block' : 'none';
+    return;
   }
+
+  // Nothing selected
+  show('no-sel');
 }
 
 document.getElementById('vp-label').addEventListener('input', e => {
@@ -1745,6 +1981,11 @@ document.getElementById('chk-grid').addEventListener('change', draw);
 document.getElementById('chk-labels').addEventListener('change', draw);
 document.getElementById('chk-snap').addEventListener('change', draw);
 document.getElementById('btn-save-tmpl').addEventListener('click', saveAsTemplate);
+document.getElementById('btn-reset-curve').addEventListener('click', () => {
+  if (selEdge === null) return;
+  const ed = edgeById(selEdge);
+  if (ed) { saveHistory(); ed.cx = 0; ed.cy = 0; updateProps(); draw(); }
+});
 
 // ─── Feynman Rules & Amplitude ────────────────────────────────────────────────
 const FR_DEFAULTS = {
