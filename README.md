@@ -42,6 +42,40 @@ You will see:
 
 > **Tip:** The properties panel on the right shows exactly what will happen to each selected element — which Feynman rule will apply to a vertex, what spinor a fermion leg will produce, what propagator an internal line carries.
 
+#### Time convention and momentum labelling
+
+The editor uses the convention that **time flows upward**:
+
+- **Top of the canvas** = initial state (incoming particles)
+- **Bottom of the canvas** = final state (outgoing particles)
+- **Vertical** = propagator direction (the virtual particle travels perpendicular to time)
+
+This matches standard particle physics textbook conventions (P&S, Griffiths, Peskin-Schroeder).
+
+External leg momenta are labelled **p₁, p₂** (incoming, top) and **p₃, p₄** (outgoing, bottom), sorted top-to-bottom then left-to-right within each group. The Mandelstam variables are then:
+
+| Variable | Definition | Propagator in |
+|---|---|---|
+| s = (p₁+p₂)² | total CoM energy squared | s-channel (vertical photon between in/out) |
+| t = (p₁−p₃)² | momentum transfer, same-side chain | t-channel (straight-through lines) |
+| u = (p₁−p₄)² | momentum transfer, crossed chain | u-channel (lines cross between vertices) |
+
+**Example — t vs u channel (e.g. Møller scattering e⁻e⁻→e⁻e⁻):**
+
+```
+t-channel:                     u-channel:
+  p₁↑   ↑p₃   (top)              p₁↑    ↑p₂   (top)
+     [A]                              [A]
+      |  (photon)                      |  (photon)
+     [B]                              [B]
+  p₂↓   ↓p₄   (bottom)           p₃↓    ↓p₄   (bottom)
+
+  Each vertex: straight-through     Lines cross: p₁→p₄, p₂→p₃
+  Photon carries p₁−p₃ = t         Photon carries p₁−p₄ = u
+```
+
+Draw the t-channel with both stubs at the top vertex pointing upward, and the u-channel with the fermion lines crossing between the two vertices. The editor automatically distinguishes them and labels the propagator momentum correctly.
+
 ### Step 3 — Configure Feynman rules (optional)
 
 Click **Feynman Rules ▾** in the top bar. This opens a panel where you can:
@@ -458,6 +492,8 @@ Takes a QFT scattering amplitude and walks through the full computation step by 
 **Full preset coverage**
 
 Every vertex preset in the editor is recognised by the stepper in both export paths (comment-line format via `→ Stepper`, and math-IM re-solve). Verified 15/15 end-to-end pipeline tests pass.
+
+> **Note on momentum labelling:** The stepper always uses p₁, p₂ for incoming and p₃, p₄ for outgoing particles (sorted by screen position, top-to-bottom). This makes Mandelstam detection unambiguous for any diagram layout.
 
 **Topology detection**
 

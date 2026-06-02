@@ -2204,6 +2204,28 @@ function buildAmplitude() {
     });
     const numLoops = Math.max(0, intEdges.length - intVerts.length + numIntComp);
 
+    // Sort external edges: incoming first (→ p₁,p₂), outgoing last (→ p₃,p₄).
+    // This guarantees the Mandelstam detection table works for ANY drawing order:
+    //   p₁+p₂ = s  (both incoming, coeff [1,1,0,0])
+    //   p₁-p₃ = t  (one in, one out from same chain, coeff [1,0,-1,0])
+    //   p₁-p₄ = u  (one in, one out crossed chain, coeff [1,0,0,-1])
+    // Without this sort, drawing t- and u-channel in different orders gives the
+    // same p-label assignment, making both look identical to the parser.
+    const extEdgeIsOut = e => {
+      const fExt = isExtV(e.from);
+      if (e.type === 'fermion' || e.type === 'ghost')
+        return e.reversed ? fExt : !fExt; // reversed: arrow flipped → swap in/out
+      return !fExt; // photons/scalars: from=external → incoming (0)
+    };
+    const extVPos = e => {
+      const v = vbl(isExtV(e.from) ? e.from : e.to);
+      return v ? v.y * 100000 + v.x : 0;
+    };
+    extEdges.sort((a, b) => {
+      const da = extEdgeIsOut(a) ? 1 : 0, db = extEdgeIsOut(b) ? 1 : 0;
+      return da !== db ? da - db : extVPos(a) - extVPos(b);
+    });
+
     // Momentum labels
     const extMom = {};
     extEdges.forEach((e, i) => { extMom[e.id] = { text: 'p'+uSub(i+1), latex: `p_{${i+1}}` }; });
@@ -2277,7 +2299,9 @@ function buildAmplitude() {
 
     const subL = (tpl, mom, useLatex) => tpl.replace(/{l}/g, useLatex ? mom.latex : mom.text);
 
-    // Mandelstam detection — for tree-level 2→2 (exactly 4 ext legs, 0 loops)
+    // Mandelstam detection — for tree-level 2→2 (exactly 4 ext legs, 0 loops).
+    // extEdges are sorted: p₁,p₂ = incoming (indices 0,1), p₃,p₄ = outgoing (2,3).
+    // Standard definitions: s=(p₁+p₂)², t=(p₁-p₃)², u=(p₁-p₄)²
     // Returns 's', 't', 'u', or null.
     const detectMandelstam = coeff => {
       if (nExt !== 4 || numLoops > 0) return null;
@@ -2288,7 +2312,34 @@ function buildAmplitude() {
       const first = e4.findIndex(c => c !== 0);
       const norm = e4[first] < 0 ? e4.map(c => -c) : [...e4];
       const key = norm.join(',');
-      return { '1,1,0,0':'s','0,0,1,1':'s','1,0,-1,0':'t','0,1,0,-1':'t','1,0,0,-1':'u','0,1,-1,0':'u' }[key] || null;
+      // Primary table (after sort: p₁,p₂=in at 0,1; p₃,p₄=out at 2,3)
+      const table = {
+        '1,1,0,0':'s', '0,0,1,1':'s',                    // p₁+p₂ or p₃+p₄
+        '1,0,-1,0':'t', '0,1,0,-1':'t',                   // p₁-p₃ or p₂-p₄
+        '1,0,0,-1':'u', '0,1,-1,0':'u',                   // p₁-p₄ or p₂-p₃
+        // Fallback patterns for non-standard orderings (robustness)
+        '1,-1,0,0': null, '0,0,1,-1': null,               // p₁-p₂: not standard Mandelstam
+        '0,0,-1,1': null, '-1,1,0,0': null,
+      };
+      if (key in table) return table[key];
+      // Last resort: classify by which legs are involved using their in/out status
+      const idx = e4.reduce((a,c,i)=>c!==0?[...a,i]:a,[]);
+      const [i,j] = idx;
+      const isIn = k => !extEdgeIsOut(extEdges[k]);
+      // s = both same direction (both in or both out), same sign coefficient
+      if (norm[i]===norm[j] && isIn(i)===isIn(j)) return 's';
+      // t or u: opposite directions
+      if (isIn(i) !== isIn(j)) {
+        // t = in from index 0 connects to out from index 2 (same physical vertex group)
+        // u = in from index 0 connects to out from index 3 (crossed)
+        const inIdx = isIn(i) ? i : j;
+        const outIdx = isIn(i) ? j : i;
+        if (inIdx===0&&outIdx===2) return 't';
+        if (inIdx===1&&outIdx===3) return 't';
+        if (inIdx===0&&outIdx===3) return 'u';
+        if (inIdx===1&&outIdx===2) return 'u';
+      }
+      return null;
     };
 
     // Returns {text,latex} for the SQUARED propagator momentum (uses Mandelstam when possible)
