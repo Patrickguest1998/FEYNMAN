@@ -83,7 +83,7 @@
   <div id="syntax-help">
     <strong>Traces:</strong> Tr[p1 gm p2 gn] &nbsp;|&nbsp; <strong>Momenta inside trace:</strong> p1…p8, k (always slashed) &nbsp;|&nbsp; <strong>Gammas:</strong> gm gn gr gs ga gb (index labels — matching labels are contracted)<br>
     <strong>Scalars:</strong> e2 e4 gs2 gs4 m2 &nbsp;|&nbsp; <strong>Denominators:</strong> /s /t /u /s2 /t2 /u2 &nbsp;|&nbsp; <strong>Spinors (for squaring):</strong> ubar(p1) gm u(p3) &nbsp;|&nbsp; <strong>Sum momenta:</strong> (p1+k) inside Tr<br>
-    <strong>Ctrl+Enter</strong> to solve &nbsp;·&nbsp; <strong>Kinematic assumption:</strong> 4-point 2→2 massless (p1,p2 in; p3,p4 out)
+    <strong>Ctrl+Enter</strong> to solve &nbsp;·&nbsp; <strong>Kinematic assumption:</strong> 4-point 2→2 massless (p1=TL,p2=BL in; p3=BR,p4=TR out (CCW))
   </div>
   <div class="input-row">
     <button onclick="go()">Solve ▶</button>
@@ -287,7 +287,14 @@ function identify(parsed) {
   return {type:'unknown'};
 }
 
-// ─── Mandelstam dot products (4-point 2→2 massless: p1,p2 in; p3,p4 out) ─────
+// ─── Mandelstam dot products ──────────────────────────────────────────────────
+// Standard P&S labelling (time flows left→right):
+//   p₁=TL(in), p₂=BL(in), p₃=TR(out), p₄=BR(out)
+//   s=(p₁+p₂)²  t=(p₁-p₃)² [same top line TL↔TR]  u=(p₁-p₄)² [crossed TL↔BR]
+// Dot products (massless: s+t+u=0):
+//   p₁·p₂=+s/2  p₃·p₄=+s/2  (both-incoming and both-outgoing pairs)
+//   p₁·p₃=-t/2  p₂·p₄=-t/2  (same-line pairs → t-channel)
+//   p₁·p₄=-u/2  p₂·p₃=-u/2  (crossed pairs   → u-channel)
 const DP = {
   'p1,p2':'+s/2','p2,p1':'+s/2','p3,p4':'+s/2','p4,p3':'+s/2',
   'p1,p3':'-t/2','p3,p1':'-t/2','p2,p4':'-t/2','p4,p2':'-t/2',
@@ -433,14 +440,14 @@ function stepsDouble4(parsed, pat) {
     const massTerms = `32[${mAB!==0?`${mAB<0?'−':'+'}${M('m')}²·(${cd.html})`:''} ${mCD!==0?`${mCD<0?'−':'+'}${M('m')}²·(${ab.html})`:''} ${(mAB!==0&&mCD!==0)?`+ 2·${mAB*mCD<0?'−':''}${M('m')}⁴`:''}]`;
     steps.push({
       title:'Substitute Mandelstam + collect mass terms',
-      rule:`p₁·p₂=s/2, p₁·p₃=−t/2, p₁·p₄=−u/2, p₂·p₃=−u/2, p₂·p₄=−t/2, p₃·p₄=s/2`,
+      rule:`p₁·p₂=s/2, p₁·p₃=−t/2, p₂·p₄=−t/2, p₁·p₄=−u/2, p₂·p₃=−u/2, p₃·p₄=s/2`,
       expr:`${sc}[${ev.step4html}] + ${massTerms}`,
       expl:`Kinematic dot products → Mandelstam. Mass correction terms remain as m² and m⁴ coefficients.`
     });
   } else {
     steps.push({
       title:'Substitute Mandelstam variables',
-      rule:`<strong>4-point 2→2 massless:</strong> p₁·p₂=s/2, p₁·p₃=−t/2, p₁·p₄=−u/2, p₂·p₃=−u/2, p₂·p₄=−t/2, p₃·p₄=s/2`,
+      rule:`<strong>4-point 2→2 massless:</strong> p₁·p₂=s/2, p₁·p₃=−t/2, p₂·p₄=−t/2, p₁·p₄=−u/2, p₂·p₃=−u/2, p₃·p₄=s/2`,
       expr:`${sc}${ev.step4html}`,
       expl:`All dot products determined by momentum conservation + massless on-shell.`
     });
@@ -479,7 +486,7 @@ function stepsErrSameIndex(parsed, pat) {
        <code style="color:#6080c0">${rTrace(parsed.traces[0]).replace(new RegExp('g'+idx,'g'),'g<span style="color:#e06060">'+idx+'</span>').replace(new RegExp('g'+idx),'g<span style="color:#e06060">'+idx+'</span>')}</code> is wrong<br>
        You want: <code style="color:#50a050">${fixed1} * ${fixed2}</code> — use <strong>two different index labels</strong> (e.g. <code>g${idx}</code> and <code>g${nextIdx}</code>), one per trace, matching between the traces.`,
      expr:`<span style="color:#406040">${TR('Tr')}[${slash('p1')} ${gmu(idx)} ${slash('p2')} ${gmu(nextIdx)}] × ${TR('Tr')}[${slash('p3')} ${G('γ')}<sub>${idx}</sub> ${slash('p4')} ${G('γ')}<sub>${nextIdx}</sub>]</span>`,
-     expl:`Each trace has ONE occurrence of each index label. The contraction is then between the two traces, giving the master formula 32[(p₁·p₃)(p₂·p₄)+(p₁·p₄)(p₂·p₃)].`},
+     expl:`Each trace has ONE occurrence of each index label. The contraction is then between the two traces, giving the master formula 32[(A·C)(B·D)+(A·D)(B·C)] where A,B are the momenta in trace 1 and C,D in trace 2.`},
     {title:'How to re-enter this expression',
      rule:'',
      expr:`<span style="color:#404060">Try: <span style="color:#6080b0">(e4/s2) * Tr[p1 g${idx} p2 g${nextIdx}] * Tr[p3 g${idx} p4 g${nextIdx}]</span></span>`,
@@ -1034,39 +1041,6 @@ function wickTrace(elems) {
   return Sscale(res, massFactor);
 }
 
-// Contract a free index pair with −g_{μν} (polarisation sum or propagator metric)
-// Finds metrics [μ,X] and [ν,Y] in each term and contracts them
-function contractPolPair(terms, mu, nu) {
-  return terms.flatMap(t => {
-    const free = t.free;
-    const iMu = free.findIndex(([a,b]) => a===mu||b===mu);
-    const iNu = free.findIndex(([a,b]) => a===nu||b===nu);
-
-    if (iMu<0 && iNu<0) return [t]; // neither index present — leave unchanged
-
-    // Both appear in same entry [mu, nu]
-    if (iMu===iNu && iMu>=0) {
-      const rest = free.filter((_,i)=>i!==iMu);
-      return [{...t, c:-4*t.c, free:rest}]; // −g_{μν}g^{μν} = −4 (trace of metric)
-    }
-
-    if (iMu>=0 && iNu>=0) {
-      // Separate entries: g^{μX} and g^{νY}
-      // −g_{μν} g^{μX} g^{νY} = −g^{XY}
-      const [ma,mb] = free[iMu]; const X = ma===mu?mb:ma;
-      const [na,nb] = free[iNu]; const Y = na===nu?nb:na;
-      const rest = free.filter((_,i)=>i!==iMu&&i!==iNu);
-      if (X===Y) return [{...t, c:-t.c, free:rest}]; // −g^{XX} effectively -1 (already scalar)
-      return [{...t, c:-t.c, free:[...rest,[X,Y]]}];
-    }
-
-    // Only one index found — cannot contract yet, leave
-    return [t];
-  });
-}
-
-// Simplify remaining free metrics: contract p:mom component vectors
-// g^{μ, p:pA} × g^{μ, p:pB} → p_A · p_B  (momentum component squared / dotted)
 function resolveMomComps(terms) {
   return terms.flatMap(t => {
     const pComps = t.free.filter(([a,b])=>a.startsWith('p:')||b.startsWith('p:'));
@@ -1471,7 +1445,6 @@ function stepsGeneralAmplitude(text) {
 //   Step 5: substitute Mandelstam p_i·p_j
 //
 function stepsTripleGaugeVertex(text, topology) {
-  const {nTripleGaugeVert, nPhotProp, nPhotExt, nVert} = topology;
 
   const step0 = `<div style="font-size:13px;color:#8090b8;background:#07070f;padding:8px 12px;border-radius:3px;border:1px solid #151535;line-height:2">${esc(text)}</div>`;
 
@@ -2023,7 +1996,7 @@ function stepsSquareYukawa(text) {
 
     {title:'Combine traces → substitute Mandelstam',
      rule:`<strong>4-point 2→2 massless kinematics:</strong><br>
-       p₁·p₂=s/2, p₁·p₃=−t/2, p₁·p₄=−u/2, p₂·p₃=−u/2, p₂·p₄=−t/2, p₃·p₄=s/2`,
+       p₁·p₂=s/2, p₁·p₃=−t/2, p₂·p₄=−t/2, p₁·p₄=−u/2, p₂·p₃=−u/2, p₃·p₄=s/2`,
      expr:`Σ<sub>spins</sub>|M|² = ${finalExpr}`,
      expl:`${crossAll>0
        ? `Both traces give +m², product = (A·B+m²)(C·D+m²). In the massless limit m→0: reduces to 16(m_f/v)⁴(${T1.dpPart})(${T2.dpPart})/(${denomLabel})².`

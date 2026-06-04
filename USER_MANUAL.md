@@ -21,14 +21,16 @@ Open `feynman_editor.html`. The dark canvas is where you draw. Tools are on the 
 
 ### Drawing convention
 
-**Time flows upward.** Put incoming particles at the top, outgoing at the bottom.
+**Time flows left to right** (Griffiths convention). Put incoming particles on the left, outgoing on the right.
 
 ```
-  p₁ ↑    ↑ p₂     ← initial state (TOP)
-      [V₁]
-       |
-      [V₂]
-  p₃ ↓    ↓ p₄     ← final state (BOTTOM)
+  p₁ →——[V₁]——————[V₂]——→ p₃
+             \    /
+              (γ*)          ← propagator
+             /    \
+  p₂ →——[V₃]——————[V₄]——→ p₄
+
+  LEFT = initial state      RIGHT = final state
 ```
 
 ### Step by step
@@ -95,20 +97,30 @@ iM =
 
 ### What gets labelled automatically
 
-- **Momentum** — assigned from the topology using momentum conservation. Incoming legs get p₁, p₂ (top); outgoing get p₃, p₄ (bottom).
+- **Momentum** — assigned from the topology using momentum conservation. Incoming legs (left) get p₁, p₂; outgoing legs (right) get p₃, p₄.
 - **Mandelstam variable** — photon propagators are labelled [s], [t], or [u] depending on which legs feed into them.
 - **Spinors** — u/ū for normal fermion arrows, v̄/v for reversed (antiparticle) arrows.
 - **Lorentz indices** — μ, ν, ρ, ... assigned automatically and tracked through the diagram.
 
+### Momentum labelling
+
+Legs are numbered **counter-clockwise from the top-left**:
+
+```
+  p₁ (TL) ──────────────── p₄ (TR)
+  p₂ (BL) ──────────────── p₃ (BR)
+  ← CCW going down left, across bottom, up right
+```
+
 ### Mandelstam variables
 
-| Label | Definition | When it appears |
+| Label | Definition | Diagram topology |
 |---|---|---|
-| s | (p₁+p₂)² | Propagator connecting both incoming legs (annihilation) |
-| t | (p₁−p₃)² | Propagator: p₁ and p₃ at the same vertex (straight lines) |
-| u | (p₁−p₄)² | Propagator: p₁ and p₄ at the same vertex (crossed lines) |
+| s | (p₁+p₂)² | Both incoming legs meet at same vertex (annihilation) |
+| t | (p₁−p₄)² | TL↔TR: straight-through, same horizontal line |
+| u | (p₁−p₃)² | TL↔BR: crossed, lines switch sides |
 
-**t vs u channel:** draw t-channel with fermion lines going straight through each vertex; draw u-channel with fermion lines crossing between the two vertices. The editor distinguishes them automatically.
+**t vs u channel:** draw t-channel with fermion lines going straight through (TL→TR and BL→BR); draw u-channel with lines crossing (TL→BR and BL→TR). The editor distinguishes them automatically.
 
 ---
 

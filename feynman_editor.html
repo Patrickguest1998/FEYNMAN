@@ -540,6 +540,8 @@ resize();
 function saveHistory() {
   history.push(JSON.parse(JSON.stringify({verts, edges})));
   if (history.length > 80) history.shift();
+  // Auto-save current diagram to localStorage after every edit
+  try { localStorage.setItem('feynman_diagram', JSON.stringify({verts, edges, nextId})); } catch(e) {}
 }
 function undo() {
   if (!history.length) return;
@@ -562,7 +564,7 @@ function builtinTemplates() {
         {idx:0, x:  0, y:  0, label:'e',  style:'dot',  isCenter:true},
         {idx:1, x:-75, y:-75, label:'',   style:'none', isCenter:false},
         {idx:2, x: 75, y:-75, label:'',   style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'γ',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:1, toIdx:0, type:'fermion', label:'', reversed:false, cx:0, cy:0},
@@ -576,7 +578,7 @@ function builtinTemplates() {
         {idx:0, x:  0, y:  0, label:'q',  style:'dot',  isCenter:true},
         {idx:1, x:-75, y:-75, label:'',   style:'none', isCenter:false},
         {idx:2, x: 75, y:-75, label:'',   style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'g',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:1, toIdx:0, type:'fermion', label:'', reversed:false, cx:0, cy:0},
@@ -588,9 +590,9 @@ function builtinTemplates() {
       name: 'QCD 3g vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'3g', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'g',  style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'g',  style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'g',  style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:0, toIdx:1, type:'gluon', label:'', reversed:false, cx:0, cy:0},
@@ -603,9 +605,9 @@ function builtinTemplates() {
       name: 'W lepton vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'lW', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'ℓ',  style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'ν',  style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'W',  style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:1, toIdx:0, type:'fermion', label:'', reversed:false, cx:0, cy:0},
@@ -617,9 +619,9 @@ function builtinTemplates() {
       name: 'W quark vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'qW', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'u',  style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'d',  style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'W',  style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:1, toIdx:0, type:'fermion', label:'', reversed:false, cx:0, cy:0},
@@ -631,9 +633,9 @@ function builtinTemplates() {
       name: 'Z vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'Zf', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'f',  style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'f',  style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'Z',  style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:1, toIdx:0, type:'fermion', label:'', reversed:false, cx:0, cy:0},
@@ -645,9 +647,9 @@ function builtinTemplates() {
       name: 'H–fermion vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'Hf', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'f',  style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'f',  style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'H',  style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',  style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',  style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:1, toIdx:0, type:'fermion', label:'', reversed:false, cx:0, cy:0},
@@ -659,9 +661,9 @@ function builtinTemplates() {
       name: 'WWγ triple gauge',
       verts: [
         {idx:0, x:  0, y:  0, label:'WWγ', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'W',   style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'W',   style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'γ',   style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',   style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:0, toIdx:1, type:'photon', label:'', reversed:false, cx:0, cy:0},
@@ -673,9 +675,9 @@ function builtinTemplates() {
       name: 'WWZ triple gauge',
       verts: [
         {idx:0, x:  0, y:  0, label:'WWZ', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'W',   style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'W',   style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'Z',   style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',   style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:0, toIdx:1, type:'photon', label:'', reversed:false, cx:0, cy:0},
@@ -687,9 +689,9 @@ function builtinTemplates() {
       name: 'HWW vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'HWW', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'W',   style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'W',   style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'H',   style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',   style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:0, toIdx:1, type:'photon', label:'', reversed:false, cx:0, cy:0},
@@ -701,9 +703,9 @@ function builtinTemplates() {
       name: 'HZZ vertex',
       verts: [
         {idx:0, x:  0, y:  0, label:'HZZ', style:'dot',  isCenter:true},
-        {idx:1, x:-75, y:-75, label:'Z',   style:'none', isCenter:false},
-        {idx:2, x: 75, y:-75, label:'Z',   style:'none', isCenter:false},
-        {idx:3, x:  0, y: 75, label:'H',   style:'none', isCenter:false},
+        {idx:1, x:-75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:2, x: 75, y:-75, label:'',   style:'none', isCenter:false},
+        {idx:3, x:  0, y: 75, label:'',   style:'none', isCenter:false},
       ],
       edges: [
         {fromIdx:0, toIdx:1, type:'photon', label:'', reversed:false, cx:0, cy:0},
@@ -1030,6 +1032,34 @@ function draw() {
 
   // Vertices
   verts.forEach(v => drawVert(v, selVerts.has(v.id)));
+
+  // Momentum labels on external stubs — placed at midpoint of each branch
+  ctx.save();
+  ctx.font = `italic ${Math.round(13/zoom)}px serif`;
+  verts.forEach(v => {
+    if (!v.momLabel) return;
+    const e = edges.find(f => f.from === v.id || f.to === v.id);
+    let lx = v.x + 10, ly = v.y - 10;
+    if (e) {
+      const oth = vertById(e.from === v.id ? e.to : e.from);
+      if (oth) {
+        // Midpoint of the external branch line
+        const mx = (v.x + oth.x) / 2, my = (v.y + oth.y) / 2;
+        // Small perpendicular offset so label clears the line
+        const dx = v.x - oth.x, dy = v.y - oth.y;
+        const d = Math.hypot(dx, dy) || 1;
+        const nx = -dy / d, ny = dx / d;   // unit normal
+        lx = mx + nx * 14;
+        ly = my + ny * 14 + 4;
+      }
+    }
+    // Outline for readability
+    ctx.fillStyle = '#0d0d14';
+    for (const [ox,oy] of [[-1,0],[1,0],[0,-1],[0,1]]) ctx.fillText(v.momLabel, lx+ox, ly+oy);
+    ctx.fillStyle = '#7ab8e8';
+    ctx.fillText(v.momLabel, lx, ly);
+  });
+  ctx.restore();
 
   // Edge-in-progress ghost line
   if (edgeSrc !== null) {
@@ -1775,12 +1805,6 @@ function edgeIsExternal(e) {
   return isExtV(vertById(e.from)) || isExtV(vertById(e.to));
 }
 
-function vertLabel(id) {
-  const v = vertById(id);
-  if (!v) return '?';
-  return v.label ? `"${v.label}"` : `(${v.style||'dot'})`;
-}
-
 function updateProps() {
   const show = id => document.getElementById(id).style.display='block';
   const hide = id => document.getElementById(id).style.display='none';
@@ -2153,6 +2177,7 @@ function buildAmplitude() {
   readRulesFromPanel();
   const display = document.getElementById('amp-display');
   if (!verts.length) { display.textContent = 'No diagram drawn yet.'; latexAmplitude=''; return; }
+  verts.forEach(v => { delete v.momLabel; }); // clear previous momentum labels
 
   const uSub = n => String(n).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[+c]||c).join('');
 
@@ -2211,19 +2236,31 @@ function buildAmplitude() {
     //   p₁-p₄ = u  (one in, one out crossed chain, coeff [1,0,0,-1])
     // Without this sort, drawing t- and u-channel in different orders gives the
     // same p-label assignment, making both look identical to the parser.
-    const extEdgeIsOut = e => {
-      const fExt = isExtV(e.from);
-      if (e.type === 'fermion' || e.type === 'ghost')
-        return e.reversed ? fExt : !fExt; // reversed: arrow flipped → swap in/out
-      return !fExt; // photons/scalars: from=external → incoming (0)
-    };
-    const extVPos = e => {
-      const v = vbl(isExtV(e.from) ? e.from : e.to);
-      return v ? v.y * 100000 + v.x : 0;
-    };
+    // Physical direction = where the external stub sits in the edge:
+    //   from = external stub  →  particle/antiparticle ENTERS diagram = INCOMING
+    //   to   = external stub  →  particle/antiparticle EXITS  diagram = OUTGOING
+    //
+    // The `reversed` flag only determines spinor type (u/v vs ū/v̄).
+    // It does NOT change the physical momentum direction:
+    //   e⁺ drawn from external→vertex (reversed=true) is still INCOMING
+    //   e⁺ drawn from vertex→external (reversed=true) is still OUTGOING
+    //
+    // Correct Mandelstam mapping after sort:
+    //   s-channel (e⁺e⁻→γ*→μ⁺μ⁻): both e⁻ and e⁺ from=external → both INCOMING
+    //     → p₁=e⁻, p₂=e⁺ at indices 0,1 → photon coeff [1,1,0,0] → 's' ✓
+    // Standard P&S labelling (time flows LEFT → RIGHT):
+    //   p₁ = top-left  (incoming)   p₃ = top-right  (outgoing)
+    //   p₂ = bot-left  (incoming)   p₄ = bot-right  (outgoing)
+    // Both groups sorted top-to-bottom (y ascending).
+    // Mandelstam: s=(p₁+p₂)²  t=(p₁-p₃)² [same top line]  u=(p₁-p₄)² [crossed]
+    const extEdgeIsOut = e => !isExtV(e.from);
+    const extV = e => vbl(isExtV(e.from) ? e.from : e.to);
     extEdges.sort((a, b) => {
       const da = extEdgeIsOut(a) ? 1 : 0, db = extEdgeIsOut(b) ? 1 : 0;
-      return da !== db ? da - db : extVPos(a) - extVPos(b);
+      if (da !== db) return da - db;             // incoming before outgoing
+      const va = extV(a), vb = extV(b);
+      if (!va || !vb) return 0;
+      return (va.y - vb.y) || (va.x - vb.x);   // both groups: top-to-bottom
     });
 
     // Momentum labels
@@ -2232,6 +2269,12 @@ function buildAmplitude() {
     const loopMoms = Array.from({length: numLoops}, (_, i) =>
       ({ text: 'ℓ'+uSub(i+1), latex: `\\ell_{${i+1}}` })
     );
+
+    // Tag each external stub vertex so draw() can render the label on the canvas
+    extEdges.forEach(e => {
+      const v = vbl(isExtV(e.from) ? e.from : e.to);
+      if (v) v.momLabel = extMom[e.id].text;
+    });
 
     // Momentum coefficient vectors
     const nExt = extEdges.length, nBasis = nExt + numLoops;
@@ -2299,10 +2342,11 @@ function buildAmplitude() {
 
     const subL = (tpl, mom, useLatex) => tpl.replace(/{l}/g, useLatex ? mom.latex : mom.text);
 
-    // Mandelstam detection — for tree-level 2→2 (exactly 4 ext legs, 0 loops).
-    // extEdges are sorted: p₁,p₂ = incoming (indices 0,1), p₃,p₄ = outgoing (2,3).
-    // Standard definitions: s=(p₁+p₂)², t=(p₁-p₃)², u=(p₁-p₄)²
-    // Returns 's', 't', 'u', or null.
+    // Mandelstam detection — standard P&S labelling (time flows left→right):
+    //   p₁=TL(idx 0), p₂=BL(idx 1), p₃=TR(idx 2), p₄=BR(idx 3)
+    //   s = (p₁+p₂)²  [1,1,0,0]  both incoming
+    //   t = (p₁-p₃)²  [1,0,-1,0] TL-TR (straight-through, same top line)
+    //   u = (p₁-p₄)²  [1,0,0,-1] TL-BR (crossed)
     const detectMandelstam = coeff => {
       if (nExt !== 4 || numLoops > 0) return null;
       if (coeff.slice(nExt).some(c => c !== 0)) return null;
@@ -2312,32 +2356,25 @@ function buildAmplitude() {
       const first = e4.findIndex(c => c !== 0);
       const norm = e4[first] < 0 ? e4.map(c => -c) : [...e4];
       const key = norm.join(',');
-      // Primary table (after sort: p₁,p₂=in at 0,1; p₃,p₄=out at 2,3)
+      // Standard table: p₁=TL(0), p₂=BL(1), p₃=TR(2), p₄=BR(3)
       const table = {
-        '1,1,0,0':'s', '0,0,1,1':'s',                    // p₁+p₂ or p₃+p₄
-        '1,0,-1,0':'t', '0,1,0,-1':'t',                   // p₁-p₃ or p₂-p₄
-        '1,0,0,-1':'u', '0,1,-1,0':'u',                   // p₁-p₄ or p₂-p₃
-        // Fallback patterns for non-standard orderings (robustness)
-        '1,-1,0,0': null, '0,0,1,-1': null,               // p₁-p₂: not standard Mandelstam
-        '0,0,-1,1': null, '-1,1,0,0': null,
+        '1,1,0,0':'s', '0,0,1,1':'s',     // p₁+p₂ or p₃+p₄ → s
+        '1,0,-1,0':'t', '0,1,0,-1':'t',   // p₁-p₃ or p₂-p₄ → t (same line)
+        '1,0,0,-1':'u', '0,1,-1,0':'u',   // p₁-p₄ or p₂-p₃ → u (crossed)
+        '1,-1,0,0': null, '0,0,1,-1': null,
       };
       if (key in table) return table[key];
-      // Last resort: classify by which legs are involved using their in/out status
+      // Fallback
       const idx = e4.reduce((a,c,i)=>c!==0?[...a,i]:a,[]);
       const [i,j] = idx;
       const isIn = k => !extEdgeIsOut(extEdges[k]);
-      // s = both same direction (both in or both out), same sign coefficient
       if (norm[i]===norm[j] && isIn(i)===isIn(j)) return 's';
-      // t or u: opposite directions
       if (isIn(i) !== isIn(j)) {
-        // t = in from index 0 connects to out from index 2 (same physical vertex group)
-        // u = in from index 0 connects to out from index 3 (crossed)
-        const inIdx = isIn(i) ? i : j;
-        const outIdx = isIn(i) ? j : i;
-        if (inIdx===0&&outIdx===2) return 't';
-        if (inIdx===1&&outIdx===3) return 't';
-        if (inIdx===0&&outIdx===3) return 'u';
-        if (inIdx===1&&outIdx===2) return 'u';
+        const inIdx = isIn(i) ? i : j, outIdx = isIn(i) ? j : i;
+        if (inIdx===0&&outIdx===2) return 't';  // TL↔TR same line
+        if (inIdx===1&&outIdx===3) return 't';  // BL↔BR same line
+        if (inIdx===0&&outIdx===3) return 'u';  // TL↔BR crossed
+        if (inIdx===1&&outIdx===2) return 'u';  // BL↔TR crossed
       }
       return null;
     };
@@ -2489,6 +2526,19 @@ function buildAmplitude() {
     const { factors, intEdges, intVerts, extEdges, numLoops, compMom } = res;
     const lbl = multi ? `iM${uSub(ci+1)}` : 'iM';
     if (multi) allLines.push(`┌── Diagram ${ci+1} ${'─'.repeat(30)}`);
+
+    // ── Momentum key: "p₁=u  p₂=v̄  p₃=ū  p₄=v" ───────────────────────────────
+    const momKey = [];
+    factors.forEach(f => {
+      if (!f.comment || !f.comment.includes('ext')) return;
+      // f.text is e.g. "u(p₁,s)" or "v̄(p₂,s)" or "ε^μ(p₁,λ)"
+      // Extract spinor/pol symbol before the first '(' and the momentum inside
+      const spinor = f.text.split('(')[0].trim();          // u, ū, v, v̄, ε^μ, ...
+      const momMatch = f.text.match(/\((p[₀-₉\d]+)/u); // p followed by subscript/digit
+      if (spinor && momMatch) momKey.push(`${momMatch[1]}=${spinor}`);
+    });
+    if (momKey.length) { allLines.push(`  Momenta: ${momKey.join('   ')}`); allLines.push(''); }
+
     allLines.push(`${lbl} =`);
     if (!factors.length) {
       allLines.push('  (no internal structure)');
@@ -2530,394 +2580,6 @@ function buildAmplitude() {
   }
 
   display.textContent = allLines.join('\n');
-}
-
-// ─── |M|² calculator ─────────────────────────────────────────────────────────
-function buildAmpSquared() {
-  readRulesFromPanel();
-  const display = document.getElementById('amp-display');
-  if (!verts.length) { display.textContent = 'No diagram drawn yet.'; latexAmplitude=''; return; }
-
-  const uSub = n => String(n).split('').map(c=>'₀₁₂₃₄₅₆₇₈₉'[+c]||c).join('');
-
-  // Find connected components
-  const compSeen = new Set();
-  const components = [];
-  verts.forEach(v => {
-    if (compSeen.has(v.id)) return;
-    const comp = connectedComponent(v.id);
-    comp.verts.forEach(cv => compSeen.add(cv.id));
-    if (comp.edges.length || comp.verts.length) components.push(comp);
-  });
-
-  // ── Per-component |M|² ───────────────────────────────────────────────────────
-  function oneAmpSq(cVerts, cEdges) {
-    const vbl = id => cVerts.find(v => v.id === id);
-
-    // Degrees
-    const deg = {};
-    cVerts.forEach(v => { deg[v.id] = 0; });
-    cEdges.forEach(e => { if (isLoop(e)) deg[e.from] += 2; else { deg[e.from]++; deg[e.to]++; } });
-    const isExtV = v => deg[v.id] <= 1;
-
-    const extEdges = cEdges.filter(e => !isLoop(e) && (isExtV(vbl(e.from)) || isExtV(vbl(e.to))));
-    const extEdgeIds = new Set(extEdges.map(e => e.id));
-    const intEdges = cEdges.filter(e => !extEdgeIds.has(e.id));
-    const intVerts = cVerts.filter(v => !isExtV(v) && v.style !== 'none' && deg[v.id] > 0);
-
-    // Momentum labels (reuse same scheme as iM)
-    const nExt = extEdges.length;
-    const extMom = {};
-    extEdges.forEach((e, i) => { extMom[e.id] = { text: 'p'+uSub(i+1), latex: `p_{${i+1}}` }; });
-
-    // Internal-line loop count
-    const intCompVis = new Set();
-    let numIntComp = 0;
-    intVerts.forEach(v => {
-      if (intCompVis.has(v.id)) return; numIntComp++;
-      const q = [v.id]; intCompVis.add(v.id);
-      while (q.length) { const vid = q.shift(); intEdges.forEach(e => { if (isLoop(e)) return; const o = e.from===vid?e.to:(e.to===vid?e.from:null); if (o&&!intCompVis.has(o)){intCompVis.add(o);q.push(o);} }); }
-    });
-    const numLoops = Math.max(0, intEdges.length - intVerts.length + numIntComp);
-    const loopMoms = Array.from({length: numLoops}, (_, i) => ({ text: 'ℓ'+uSub(i+1), latex: `\\ell_{${i+1}}` }));
-
-    // ── Momentum routing (same as buildOneAmplitude) for Mandelstam detection ──
-    const nBasis = nExt + numLoops;
-    const zV2 = () => new Array(nBasis).fill(0);
-    const addV2 = (a, b) => a.map((x, i) => x + b[i]);
-    const scaleV2 = (a, s) => a.map(x => x * s);
-    const edgeCoeff2 = {};
-    extEdges.forEach((e, i) => { const v = zV2(); v[i] = 1; edgeCoeff2[e.id] = v; });
-    const inSpan2 = new Set(), spanVis2 = new Set();
-    cVerts.forEach(sv => {
-      if (spanVis2.has(sv.id)) return; spanVis2.add(sv.id);
-      const sq = [sv.id];
-      while (sq.length) { const vid = sq.shift(); cEdges.forEach(e => { if (isLoop(e)||(e.from!==vid&&e.to!==vid)) return; const o=e.from===vid?e.to:e.from; if (!spanVis2.has(o)){spanVis2.add(o);inSpan2.add(e.id);sq.push(o);} }); }
-    });
-    let lu2 = 0;
-    intEdges.forEach(e => { if (isLoop(e)||!inSpan2.has(e.id)){const v=zV2();v[nExt+lu2++]=1;edgeCoeff2[e.id]=v;} });
-    const pv2 = new Set(), pq2 = [];
-    cVerts.forEach(v => { if (!pv2.has(v.id)){pv2.add(v.id);pq2.push(v.id);} });
-    while (pq2.length) {
-      const vid = pq2.shift();
-      const inc = cEdges.filter(e => !isLoop(e)&&(e.from===vid||e.to===vid));
-      inc.forEach(e => {
-        if (edgeCoeff2[e.id]!==undefined||!inSpan2.has(e.id)) return;
-        const others = inc.filter(f=>f.id!==e.id);
-        if (others.some(f=>edgeCoeff2[f.id]===undefined)) return;
-        let sum=zV2(); others.forEach(f=>{sum=addV2(sum,scaleV2(edgeCoeff2[f.id],f.to===vid?1:-1));});
-        edgeCoeff2[e.id]=scaleV2(sum,e.to===vid?-1:1);
-        const o=e.from===vid?e.to:e.from; if(!pv2.has(o)){pv2.add(o);pq2.push(o);}
-      });
-    }
-
-    // Mandelstam detection (same logic as in buildOneAmplitude)
-    const detectMand2 = coeff => {
-      if (nExt !== 4 || numLoops > 0) return null;
-      if (coeff.slice(nExt).some(c => c !== 0)) return null;
-      const e4 = coeff.slice(0, 4), nz = e4.filter(c => c !== 0);
-      if (nz.length !== 2) return null;
-      const fi = e4.findIndex(c => c !== 0);
-      const norm = e4[fi] < 0 ? e4.map(c => -c) : [...e4];
-      return { '1,1,0,0':'s','0,0,1,1':'s','1,0,-1,0':'t','0,1,0,-1':'t','1,0,0,-1':'u','0,1,-1,0':'u' }[norm.join(',')] || null;
-    };
-
-    // ── Fermion chain extraction ──────────────────────────────────────────────
-    const fermEdgesAll = cEdges.filter(e => e.type === 'fermion');
-    const fermOpen = fermEdgesAll.filter(e => !isLoop(e));
-
-    // Build fermion adjacency (internal vert → list of {edge, neighbor})
-    const fadj = {};
-    cVerts.forEach(v => { fadj[v.id] = []; });
-    fermOpen.forEach(e => { fadj[e.from].push({e, nbr: e.to}); fadj[e.to].push({e, nbr: e.from}); });
-
-    const fVisited = new Set();
-    const chains = []; // [{verts, fermEdges, closed}]
-
-    // Open chains: start from external verts that have a fermion edge
-    cVerts.filter(v => isExtV(v) && fadj[v.id].length).forEach(startV => {
-      if (fVisited.has(startV.id)) return;
-      fVisited.add(startV.id);
-      const chain = { verts: [startV], fermEdges: [], closed: false };
-      let curr = startV, prevE = null;
-      while (true) {
-        const nxt = fadj[curr.id].find(x => x.e !== prevE);
-        if (!nxt) break;
-        chain.fermEdges.push(nxt.e);
-        const nv = vbl(nxt.nbr);
-        chain.verts.push(nv);
-        if (fVisited.has(nv.id) || isExtV(nv)) break;
-        fVisited.add(nv.id); curr = nv; prevE = nxt.e;
-      }
-      chains.push(chain);
-    });
-
-    // Closed loops: unvisited verts still connected by fermion edges
-    cVerts.filter(v => !isExtV(v) && fadj[v.id].length && !fVisited.has(v.id)).forEach(startV => {
-      if (fVisited.has(startV.id)) return;
-      fVisited.add(startV.id);
-      const chain = { verts: [startV], fermEdges: [], closed: true };
-      let curr = startV, prevE = null;
-      while (true) {
-        const nxt = fadj[curr.id].find(x => x.e !== prevE && !chain.fermEdges.includes(x.e));
-        if (!nxt) break;
-        chain.fermEdges.push(nxt.e);
-        const nv = vbl(nxt.nbr);
-        if (nv.id === startV.id) break;
-        if (fVisited.has(nv.id)) break;
-        fVisited.add(nv.id); chain.verts.push(nv); curr = nv; prevE = nxt.e;
-      }
-      chains.push(chain);
-    });
-
-    // Self-loop fermion edges
-    fermEdgesAll.filter(e => isLoop(e)).forEach(e => {
-      chains.push({ verts: [vbl(e.from)], fermEdges: [e], closed: true, selfLoop: true });
-    });
-
-    // ── Format chains as traces ───────────────────────────────────────────────
-    // Each internal boson edge gets two Greek letters: a for the from-chain, b for the to-chain.
-    // Both are written raised (γ^μ, γ^ν). The Lorentz metric η_{μν} in the propagator
-    // contracts them between the two traces: Tr[...γ^μ...] × (η_{μν}/q⁴) × Tr[...γ^ν...].
-    const GRKT = ['μ','ν','ρ','σ','κ','τ','ω','α','β','δ'];
-    let lIdx = 0;
-    const nextIdx = () => lIdx < GRKT.length ? GRKT[lIdx++] : `μ${lIdx++ - GRKT.length}`;
-
-    // bosonIdx: edge.id → {a, b}  (a = from-chain index, b = to-chain index)
-    const bosonIdx = {};
-    intEdges.filter(e => e.type==='photon'||e.type==='gluon').forEach(e => {
-      bosonIdx[e.id] = { a: nextIdx(), b: nextIdx() };
-    });
-    extEdges.filter(e => e.type==='photon'||e.type==='gluon').forEach(e => {
-      bosonIdx[e.id] = { a: nextIdx(), b: null };
-    });
-
-    // vertBosonIdx: vid → [Greek letter, ...]
-    const vertBosonIdx = {};
-    [...intEdges, ...extEdges].filter(e => e.type==='photon'||e.type==='gluon').forEach(e => {
-      const bi = bosonIdx[e.id];
-      if (!bi) return;
-      if (extEdgeIds.has(e.id)) {
-        const ivid = isExtV(vbl(e.from)) ? e.to : e.from;
-        if (!vertBosonIdx[ivid]) vertBosonIdx[ivid] = [];
-        vertBosonIdx[ivid].push(bi.a);
-      } else {
-        if (!vertBosonIdx[e.from]) vertBosonIdx[e.from] = [];
-        if (!vertBosonIdx[e.to])   vertBosonIdx[e.to]   = [];
-        vertBosonIdx[e.from].push(bi.a);
-        vertBosonIdx[e.to].push(bi.b);
-      }
-    });
-
-    const vertGamma = v => {
-      const idxs = vertBosonIdx[v.id] || [];
-      return idxs.length ? idxs.map(i => `γ^${i}`).join('') : 'Γ';
-    };
-
-    const fermMom = (e, fromVid) => {
-      // Propagator momentum label — use the external mom label if we know it, else generic k
-      const eMom = extMom[e.id];
-      return eMom ? eMom.text : `k`;
-    };
-
-    // External spinor label at a stub vertex connected via fermion edge
-    const spinorLabel = (stubV, fermE) => {
-      const fromIsStub = stubV.id === fermE.from;
-      const extE = extEdges.find(ee => ee.from === stubV.id || ee.to === stubV.id);
-      const pLabel = extE ? extMom[extE.id].text : '?';
-      // Arrow direction determines particle vs antiparticle
-      const arrowIn = fermE.reversed ? !fromIsStub : fromIsStub;
-      // stub is at the arrow SOURCE → u(p) spinor (incoming fermion / outgoing antifermion)
-      return arrowIn ? `(/${pLabel}+m)` : `(/${pLabel}−m)`;
-    };
-
-    // Format one chain as a trace
-    const traceStr = (chain, useLatex) => {
-      const parts = ['Tr['];
-      chain.verts.forEach((v, i) => {
-        if (i > 0) {
-          // Fermion propagator between verts[i-1] and verts[i]
-          const fe = chain.fermEdges[i-1];
-          const isFermExt = extEdgeIds.has(fe.id);
-          if (!isFermExt) {
-            const eMom = extMom[fe.id];
-            const pLbl = eMom ? eMom.text : `k${uSub(i)}`;
-            parts.push(` (/${pLbl}+m)/(${pLbl}²−m²)`);
-          }
-        }
-        const isStub = isExtV(v);
-        if (isStub) {
-          // External spinor completeness relation
-          const fe = chain.fermEdges[i === 0 ? 0 : chain.fermEdges.length - 1];
-          parts.push(spinorLabel(v, fe));
-        } else {
-          parts.push(vertGamma(v));
-        }
-      });
-      if (chain.closed) parts.push(']');
-      // Conjugate side (for open chains only – closed traces already include both M and M†)
-      if (!chain.closed && chain.verts.length >= 2) {
-        // Reversed copy of internal verts (the M† part)
-        const innerVerts = chain.verts.slice(1, chain.verts.length - 1);
-        [...innerVerts].reverse().forEach((v, i) => {
-          const fe = chain.fermEdges[chain.fermEdges.length - 2 - i];
-          const isFermExt = extEdgeIds.has(fe.id);
-          if (!isFermExt) {
-            const eMom = extMom[fe.id];
-            const pLbl = eMom ? eMom.text : `k${uSub(i)}`;
-            parts.push(` (/${pLbl}+m)/(${pLbl}²−m²)`);
-          }
-          parts.push(vertGamma(v));
-        });
-        parts.push(']');
-      }
-      return parts.join('');
-    };
-
-    // ── Assemble output ───────────────────────────────────────────────────────
-    const lines = [];
-
-    // Spin-averaging factor
-    let nAvg = 1;
-    const initFermExtEdges = extEdges.filter(e => e.type==='fermion');
-    const initPhotExtEdges = extEdges.filter(e => e.type==='photon'||e.type==='gluon');
-    // Heuristic: half of external legs are "initial state" — user can adjust
-    const nInitFerm = Math.ceil(initFermExtEdges.length / 2);
-    const nInitPhot = Math.ceil(initPhotExtEdges.length / 2);
-    nAvg = Math.pow(2, nInitFerm) * Math.pow(2, nInitPhot);
-    if (nAvg > 1) lines.push(`Spin/pol. average:  1/${nAvg}   (${nInitFerm} initial fermion leg${nInitFerm!==1?'s':''}, ${nInitPhot} initial boson leg${nInitPhot!==1?'s':''})`);
-
-    // Fermion loop sign
-    const nFermLoops = chains.filter(c => c.closed).length;
-    if (nFermLoops) lines.push(`Fermion loop sign:  (−1)^${nFermLoops} = ${Math.pow(-1,nFermLoops)}`);
-
-    // Loop integrals
-    if (numLoops) {
-      lines.push(`Loop integrals:     ` + loopMoms.map(lm => `∫d⁴${lm.text}/(2π)⁴`).join(' × ') + ' (twice — once for M, once for M†)');
-    }
-
-    lines.push('');
-
-    // Fermion traces
-    if (chains.length) {
-      lines.push('Fermion traces:');
-      chains.forEach((chain, ci) => {
-        const ts = traceStr(chain, false);
-        const lbl = chain.closed ? `  Loop ${ci+1}:  ` : `  Chain ${ci+1}: `;
-        lines.push(lbl + ts);
-      });
-      lines.push('');
-    }
-
-    // Boson propagators (squared denominators)
-    const bosonPropEdges = intEdges.filter(e => e.type==='photon'||e.type==='gluon');
-    const scalarPropEdges = intEdges.filter(e => e.type!=='fermion'&&e.type!=='photon'&&e.type!=='gluon');
-    const fermPropEdges   = intEdges.filter(e => e.type==='fermion');
-
-    // Helper: squared denominator label, using Mandelstam when available
-    const sqDenomLbl = (e, fallbackIdx) => {
-      const coeff = edgeCoeff2[e.id];
-      if (coeff) {
-        const mand = detectMand2(coeff);
-        if (mand) return mand;
-        // Build raw momentum string
-        const terms = [];
-        extEdges.forEach((ee, i) => { const c = coeff[i]; if (c !== 0) terms.push(c===1?`p${uSub(i+1)}`:c===-1?`-p${uSub(i+1)}`:`${c}p${uSub(i+1)}`); });
-        for (let j = 0; j < numLoops; j++) { const c = coeff[nExt+j]; if (c !== 0) terms.push(c===1?`ℓ${uSub(j+1)}`:c===-1?`-ℓ${uSub(j+1)}`:`${c}ℓ${uSub(j+1)}`); }
-        const p = terms.join('+').replace(/\+-/g,'-') || '?';
-        return terms.length > 1 ? `(${p})²` : `${p}²`;
-      }
-      return `k${uSub(fallbackIdx+1)}²`;
-    };
-
-    if (bosonPropEdges.length || scalarPropEdges.length) {
-      lines.push('Propagator factors:');
-      bosonPropEdges.forEach((e, i) => {
-        const idx = bosonIdx[e.id] || {a:'μ', b:'ν'};
-        const dLbl = sqDenomLbl(e, i);
-        const dLbl4 = dLbl.endsWith('²') ? dLbl.slice(0,-1)+'⁴' : `${dLbl}²`;
-        lines.push(`  ${e.type}: −iη^{${idx.a}${idx.b}}/${dLbl}   [|M|²: η_{${idx.a}${idx.b}} contracts Tr[...γ^${idx.a}...] with Tr[...γ^${idx.b}...], denom 1/${dLbl4}]`);
-      });
-      scalarPropEdges.forEach((e, i) => {
-        const dLbl = sqDenomLbl(e, i);
-        lines.push(`  ${e.type}: i/(${dLbl}−m²)   [squared: 1/(${dLbl}−m²)²]`);
-      });
-      lines.push('');
-    }
-
-    // External boson completeness relations
-    if (initPhotExtEdges.length) {
-      lines.push('Boson completeness:');
-      initPhotExtEdges.forEach((e, i) => {
-        const pm = extMom[e.id] || { text: `k${uSub(i+1)}` };
-        const bi = bosonIdx[e.id];
-        const idx = bi ? bi.a : 'μ';
-        lines.push(`  Σ_λ ε^${idx}(${pm.text}) ε*^${idx}(${pm.text}) → −η^{${idx}${idx}'}   (Feynman gauge, Lorentz metric η not δ)`);
-      });
-      lines.push('');
-    }
-
-    // Vertex coupling prefactors
-    const vCouplings = intVerts.map(v => {
-      const vr = feynmanRules.vertices.find(r => r.label && r.label === v.label);
-      if (!vr) return null;
-      // Strip gamma matrices from the text to get the coupling part
-      const coupling = vr.text.replace(/γ\^[^ ]+/g,'').replace(/\s+/g,' ').trim();
-      return coupling || vr.text;
-    }).filter(Boolean);
-
-    if (vCouplings.length) {
-      lines.push('Vertex couplings²:  |' + vCouplings.join(' × ') + '|²');
-      lines.push('');
-    }
-
-    // Summary line
-    const nChains = chains.filter(c=>!c.closed).length;
-    const nLoopCh = chains.filter(c=>c.closed).length;
-    lines.push('─'.repeat(50));
-    const avgStr = nAvg > 1 ? `(1/${nAvg}) × ` : '';
-    const loopStr = numLoops ? loopMoms.map(lm=>`|∫d⁴${lm.text}|²`).join('×') + ' × ' : '';
-    const traceStrs = chains.map((c,i) => traceStr(c, false));
-    const bosonDenoms = bosonPropEdges.map((e,i) => { const d=sqDenomLbl(e,i); return d.endsWith('²') ? d.slice(0,-1)+'⁴' : `${d}²`; });
-    const scDenoms    = scalarPropEdges.map((e,i) => { const d=sqDenomLbl(e,i); return `(${d}−m²)²`; });
-    const denoms = [...bosonDenoms, ...scDenoms];
-    const coupStr = vCouplings.length ? `|${vCouplings.join('×')}|² × ` : '';
-    const fermLoopSign = nFermLoops ? `(−1)^${nFermLoops} × ` : '';
-    const numerStr = traceStrs.length ? traceStrs.join(' × ') : '1';
-    const denomStr = denoms.length ? ' / (' + denoms.join(' × ') + ')' : '';
-    lines.push(`|iM|² = ${avgStr}${fermLoopSign}${loopStr}${coupStr}${numerStr}${denomStr}`);
-
-    return { lines };
-  }
-
-  // ── Render ───────────────────────────────────────────────────────────────────
-  const allLines = ['|iM|² — spin/polarization summed', ''];
-  const results = components.map(c => oneAmpSq(c.verts, c.edges));
-  const multi = results.length > 1;
-
-  results.forEach((res, ci) => {
-    if (multi) allLines.push(`┌── Diagram ${ci+1} ${'─'.repeat(30)}`);
-    allLines.push(...res.lines);
-    if (multi) allLines.push('');
-  });
-
-  if (multi) {
-    allLines.push('');
-    allLines.push('Combined (disconnected diagrams are independent processes):');
-    allLines.push('  |iM|² = |iM₁|² + |iM₂|² + 2·Re(iM₁(iM₂)*)');
-    allLines.push('  (interference term vanishes for truly disconnected topologies)');
-  }
-
-  allLines.push('');
-  allLines.push('─── Trace identities for evaluation ───────────────────────────────');
-  allLines.push('  Tr[γ^μ γ^ν]           = 4η^{μν}');
-  allLines.push('  Tr[γ^μ γ^ν γ^ρ γ^σ]  = 4(η^{μν}η^{ρσ} − η^{μρ}η^{νσ} + η^{μσ}η^{νρ})');
-  allLines.push('  Tr[odd # of γ]         = 0');
-  allLines.push('  Tr[γ^5 γ^μ γ^ν γ^ρ γ^σ] = 4iε^{μνρσ}');
-  allLines.push('  η^{μν}η_{μν}           = 4   (Minkowski: signature +−−−)');
-
-  display.textContent = allLines.join('\n');
-  latexAmplitude = '';  // clear so Copy LaTeX doesn't give stale M value
 }
 
 // ─── Feynman Rules event listeners ───────────────────────────────────────────
@@ -3006,7 +2668,22 @@ function loadSample() {
   nextId = 15;
 }
 
-loadSample();
+// Restore last session or fall back to sample diagram
+(function restoreOrSample() {
+  try {
+    const saved = localStorage.getItem('feynman_diagram');
+    if (saved) {
+      const s = JSON.parse(saved);
+      if (s.verts && s.verts.length > 0) {
+        verts  = s.verts;
+        edges  = s.edges || [];
+        nextId = s.nextId || (Math.max(0, ...verts.map(v=>v.id), ...edges.map(e=>e.id)) + 1);
+        return;
+      }
+    }
+  } catch(e) {}
+  loadSample(); // nothing saved yet — show the example diagram
+})();
 loadTemplates();
 renderTemplates();
 loadFRules();

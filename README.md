@@ -44,37 +44,50 @@ You will see:
 
 #### Time convention and momentum labelling
 
-The editor uses the convention that **time flows upward**:
+The editor uses the convention that **time flows left to right** (Griffiths / standard HEP convention):
 
-- **Top of the canvas** = initial state (incoming particles)
-- **Bottom of the canvas** = final state (outgoing particles)
-- **Vertical** = propagator direction (the virtual particle travels perpendicular to time)
+- **Left of the canvas** = initial state (incoming particles, p₁, p₂)
+- **Right of the canvas** = final state (outgoing particles, p₃, p₄)
+- **Propagators** run horizontally or diagonally between the two sides
 
-This matches standard particle physics textbook conventions (P&S, Griffiths, Peskin-Schroeder).
+External leg momenta are numbered **counter-clockwise from the top-left corner**:
 
-External leg momenta are labelled **p₁, p₂** (incoming, top) and **p₃, p₄** (outgoing, bottom), sorted top-to-bottom then left-to-right within each group. The Mandelstam variables are then:
+```
+  p₁ (top-left)  ────────────────  p₄ (top-right)
+                                           ↑
+       ←  counter-clockwise         (CCW direction)
+                                           ↓
+  p₂ (bot-left)  ────────────────  p₃ (bot-right)
+```
+
+- **p₁, p₂** = incoming legs (left side, going down: top-left first)
+- **p₃, p₄** = outgoing legs (right side, going up: bottom-right first)
+
+The Mandelstam variables are then:
 
 | Variable | Definition | Propagator in |
 |---|---|---|
-| s = (p₁+p₂)² | total CoM energy squared | s-channel (vertical photon between in/out) |
-| t = (p₁−p₃)² | momentum transfer, same-side chain | t-channel (straight-through lines) |
-| u = (p₁−p₄)² | momentum transfer, crossed chain | u-channel (lines cross between vertices) |
+| s = (p₁+p₂)² | total CoM energy squared | s-channel (both left legs meet at one vertex) |
+| t = (p₁−p₄)² | momentum transfer, same-line | t-channel (TL→TR straight-through, no crossing) |
+| u = (p₁−p₃)² | momentum transfer, crossed | u-channel (TL→BR diagonal, lines cross) |
 
-**Example — t vs u channel (e.g. Møller scattering e⁻e⁻→e⁻e⁻):**
+**Example — s, t, u channels (time flows →):**
 
 ```
-t-channel:                     u-channel:
-  p₁↑   ↑p₃   (top)              p₁↑    ↑p₂   (top)
-     [A]                              [A]
-      |  (photon)                      |  (photon)
-     [B]                              [B]
-  p₂↓   ↓p₄   (bottom)           p₃↓    ↓p₄   (bottom)
+s-channel:              t-channel:              u-channel:
 
-  Each vertex: straight-through     Lines cross: p₁→p₄, p₂→p₃
-  Photon carries p₁−p₃ = t         Photon carries p₁−p₄ = u
+p₁→\                   p₁→[A]→p₄              p₁→[A]→p₃  (crosses to BR!)
+    [A]                      |                       |
+     |  (γ*)                (γ*)                   (γ*)
+    [B]                      |                       |
+p₂→/                   p₂→[B]→p₃              p₂→[B]→p₄  (crosses to TR!)
+   ↓                         ↓                       ↓
+  p₃,p₄                   p₁-p₄=t                p₁-p₃=u
+
+Photon: p₁+p₂=s        Photon: p₁−p₄=t         Photon: p₁−p₃=u
 ```
 
-Draw the t-channel with both stubs at the top vertex pointing upward, and the u-channel with the fermion lines crossing between the two vertices. The editor automatically distinguishes them and labels the propagator momentum correctly.
+The editor automatically assigns the correct Mandelstam label based on which external legs connect to each vertex.
 
 ### Step 3 — Configure Feynman rules (optional)
 
