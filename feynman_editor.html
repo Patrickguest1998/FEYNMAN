@@ -2188,7 +2188,9 @@ function buildAmplitude() {
     if (compSeen.has(v.id)) return;
     const comp = connectedComponent(v.id);
     comp.verts.forEach(cv => compSeen.add(cv.id));
-    if (comp.edges.length || comp.verts.length) components.push(comp);
+    // A real diagram needs at least one edge. Skip stray isolated vertices
+    // (e.g. a leftover dot) so they don't produce a phantom "empty amplitude".
+    if (comp.edges.length) components.push(comp);
   });
 
   // ── Per-component amplitude ──────────────────────────────────────────────────
@@ -2202,7 +2204,9 @@ function buildAmplitude() {
       else { deg[e.from]++; deg[e.to]++; }
     });
 
-    const isExtV = v => deg[v.id] <= 1;
+    // A degree-≤1 point is an external leg terminus (NOT an interaction vertex).
+    // Degree alone is the reliable signal — leg endpoints have exactly one edge.
+    const isExtV = v => v && deg[v.id] <= 1;
     const intVerts = cVerts.filter(v => !isExtV(v));
 
     const extEdges = cEdges.filter(e =>
@@ -2229,38 +2233,47 @@ function buildAmplitude() {
     });
     const numLoops = Math.max(0, intEdges.length - intVerts.length + numIntComp);
 
-    // Sort external edges: incoming first (→ p₁,p₂), outgoing last (→ p₃,p₄).
-    // This guarantees the Mandelstam detection table works for ANY drawing order:
-    //   p₁+p₂ = s  (both incoming, coeff [1,1,0,0])
-    //   p₁-p₃ = t  (one in, one out from same chain, coeff [1,0,-1,0])
-    //   p₁-p₄ = u  (one in, one out crossed chain, coeff [1,0,0,-1])
-    // Without this sort, drawing t- and u-channel in different orders gives the
-    // same p-label assignment, making both look identical to the parser.
-    // Physical direction = where the external stub sits in the edge:
-    //   from = external stub  →  particle/antiparticle ENTERS diagram = INCOMING
-    //   to   = external stub  →  particle/antiparticle EXITS  diagram = OUTGOING
+    // Channel reference (time flows LEFT → RIGHT):
+    //   s-channel = SIDEWAYS diagram: two left legs annihilate at the left vertex,
+    //     photon runs HORIZONTALLY across, two right legs produced. Propagator = p₁+p₂.
+    //   t-channel = VERTICAL diagram: fermion lines pass straight through each vertex
+    //     (left→right), photon runs VERTICALLY between them. Propagator = p₁−p₃.
+    //   u-channel = crossed fermion lines, photon vertical. Propagator = p₁−p₄.
+    // The actual channel is computed by detectMandelstam from the routed propagator
+    // momentum — it is NOT inferred from the drawing orientation.
     //
-    // The `reversed` flag only determines spinor type (u/v vs ū/v̄).
-    // It does NOT change the physical momentum direction:
-    //   e⁺ drawn from external→vertex (reversed=true) is still INCOMING
-    //   e⁺ drawn from vertex→external (reversed=true) is still OUTGOING
-    //
-    // Correct Mandelstam mapping after sort:
-    //   s-channel (e⁺e⁻→γ*→μ⁺μ⁻): both e⁻ and e⁺ from=external → both INCOMING
-    //     → p₁=e⁻, p₂=e⁺ at indices 0,1 → photon coeff [1,1,0,0] → 's' ✓
-    // Standard P&S labelling (time flows LEFT → RIGHT):
-    //   p₁ = top-left  (incoming)   p₃ = top-right  (outgoing)
-    //   p₂ = bot-left  (incoming)   p₄ = bot-right  (outgoing)
-    // Both groups sorted top-to-bottom (y ascending).
-    // Mandelstam: s=(p₁+p₂)²  t=(p₁-p₃)² [same top line]  u=(p₁-p₄)² [crossed]
-    const extEdgeIsOut = e => !isExtV(e.from);
-    const extV = e => vbl(isExtV(e.from) ? e.from : e.to);
+    // PURE POSITION-BASED corner labelling — guarantees the four corners are the
+    // SAME for every 2→2 layout (vertical t-channel, sideways s-channel, crossed).
+    //   p₁ = bottom-left    p₃ = top-right
+    //   p₂ = top-left       p₄ = bottom-right
+    // Quadrant relative to the diagram centre (avg of interaction vertices).
+    // Rank: BL=0, TL=1, TR=2, BR=3  →  left side first (bottom→top), right side (top→bottom).
+    // The in/out direction (from/to) is NOT used here — only screen position — so
+    // the labels are identical regardless of how the diagram is oriented or drawn.
+    // The external STUB endpoint of an edge (isExtV takes a vertex OBJECT, so we
+    // must pass vbl(e.from), not the raw id e.from).
+    const extV = e => isExtV(vbl(e.from)) ? vbl(e.from) : vbl(e.to);
+    // Diagram centre = average of the EXTERNAL LEG endpoints (the corners).
+    // This is symmetric and robust: it does not get skewed by where the internal
+    // vertices sit, so a vertical and a sideways layout both split correctly into
+    // TL/TR/BL/BR quadrants.
+    const legPts = extEdges.map(extV).filter(Boolean);
+    const cX = legPts.length ? legPts.reduce((s,v)=>s+v.x,0)/legPts.length
+             : (intVerts.length ? intVerts.reduce((s,v)=>s+v.x,0)/intVerts.length : 0);
+    const cY = legPts.length ? legPts.reduce((s,v)=>s+v.y,0)/legPts.length
+             : (intVerts.length ? intVerts.reduce((s,v)=>s+v.y,0)/intVerts.length : 0);
+    const cornerRank = v => {
+      if (!v) return 99;
+      const left = v.x < cX;
+      if (left)  return v.y >= cY ? 0 : 1;   // BL=0, TL=1
+      else       return v.y <  cY ? 2 : 3;   // TR=2, BR=3
+    };
     extEdges.sort((a, b) => {
-      const da = extEdgeIsOut(a) ? 1 : 0, db = extEdgeIsOut(b) ? 1 : 0;
-      if (da !== db) return da - db;             // incoming before outgoing
+      const ra = cornerRank(extV(a)), rb = cornerRank(extV(b));
+      if (ra !== rb) return ra - rb;
+      // tie (same quadrant — rare): order by distance from centre then y
       const va = extV(a), vb = extV(b);
-      if (!va || !vb) return 0;
-      return (va.y - vb.y) || (va.x - vb.x);   // both groups: top-to-bottom
+      return (va.y - vb.y) || (va.x - vb.x);
     });
 
     // Momentum labels
@@ -2272,7 +2285,7 @@ function buildAmplitude() {
 
     // Tag each external stub vertex so draw() can render the label on the canvas
     extEdges.forEach(e => {
-      const v = vbl(isExtV(e.from) ? e.from : e.to);
+      const v = extV(e);   // the STUB endpoint (correctly resolved)
       if (v) v.momLabel = extMom[e.id].text;
     });
 
@@ -2305,6 +2318,19 @@ function buildAmplitude() {
       if (isLoop(e) || !inSpanTree.has(e.id)) { const v = zV(); v[nExt + loopUsed++] = 1; edgeCoeff[e.id] = v; }
     });
 
+    // Momentum orientation for EXTERNAL legs is POSITIONAL, not from the drawn
+    // arrow: the arrow shows fermion-number flow (and points backward for
+    // antiparticles) — it does NOT indicate momentum direction. With time flowing
+    // left→right, a LEFT leg carries momentum INTO the diagram (incoming, +1 into
+    // its vertex); a RIGHT leg carries momentum OUT (outgoing, −1 into its vertex).
+    const isExtEdge = e => isExtV(vbl(e.from)) || isExtV(vbl(e.to));
+    const extStub   = e => vbl(isExtV(vbl(e.from)) ? e.from : e.to);
+    const extInto   = e => { const s = extStub(e); return (s && s.x < cX) ? 1 : -1; };
+    // Sign of edge f's momentum flowing INTO vertex vid:
+    //   external → positional (left=+1 incoming, right=−1 outgoing), ignores arrow
+    //   internal → routing orientation from/to
+    const flowInto = (f, vid) => isExtEdge(f) ? extInto(f) : (f.to === vid ? 1 : -1);
+
     const propVisited = new Set(), propQ = [];
     const seed = vid => { if (!propVisited.has(vid)) { propVisited.add(vid); propQ.push(vid); } };
     cVerts.forEach(v => seed(v.id));
@@ -2315,9 +2341,13 @@ function buildAmplitude() {
         if (edgeCoeff[e.id] !== undefined || !inSpanTree.has(e.id)) return;
         const others = inc.filter(f => f.id !== e.id);
         if (others.some(f => edgeCoeff[f.id] === undefined)) return;
+        // Conservation at vid: Σ(momenta into vid) = 0 → solve for edge e.
         let sum = zV();
-        others.forEach(f => { sum = addV(sum, scaleV(edgeCoeff[f.id], f.to === vid ? 1 : -1)); });
-        edgeCoeff[e.id] = scaleV(sum, e.to === vid ? -1 : 1);
+        others.forEach(f => { sum = addV(sum, scaleV(edgeCoeff[f.id], flowInto(f, vid))); });
+        // e is internal here (externals are pre-seeded). Its into-vid sign = e.to===vid?1:-1.
+        // momentum of e into vid = −(sum of others into vid) → coeff = sum / (−signE).
+        const signE = e.to === vid ? 1 : -1;
+        edgeCoeff[e.id] = scaleV(sum, -1 / signE);
         seed(e.from === vid ? e.to : e.from);
       });
     }
@@ -2342,11 +2372,13 @@ function buildAmplitude() {
 
     const subL = (tpl, mom, useLatex) => tpl.replace(/{l}/g, useLatex ? mom.latex : mom.text);
 
-    // Mandelstam detection — standard P&S labelling (time flows left→right):
-    //   p₁=TL(idx 0), p₂=BL(idx 1), p₃=TR(idx 2), p₄=BR(idx 3)
+    // Mandelstam detection — standard P&S definitions (index-based, geometry-free):
+    //   p₁=BL(idx 0), p₂=TL(idx 1), p₃=TR(idx 2), p₄=BR(idx 3)
     //   s = (p₁+p₂)²  [1,1,0,0]  both incoming
-    //   t = (p₁-p₃)²  [1,0,-1,0] TL-TR (straight-through, same top line)
-    //   u = (p₁-p₄)²  [1,0,0,-1] TL-BR (crossed)
+    //   t = (p₁-p₃)²  [1,0,-1,0]
+    //   u = (p₁-p₄)²  [1,0,0,-1]
+    // The label follows the actual propagator momentum coefficient — the corner
+    // mapping above is just for reference; channel is determined by the routing.
     const detectMandelstam = coeff => {
       if (nExt !== 4 || numLoops > 0) return null;
       if (coeff.slice(nExt).some(c => c !== 0)) return null;
@@ -2364,17 +2396,17 @@ function buildAmplitude() {
         '1,-1,0,0': null, '0,0,1,-1': null,
       };
       if (key in table) return table[key];
-      // Fallback
+      // Fallback: classify by POSITION (left leg = incoming, right = outgoing).
       const idx = e4.reduce((a,c,i)=>c!==0?[...a,i]:a,[]);
       const [i,j] = idx;
-      const isIn = k => !extEdgeIsOut(extEdges[k]);
+      const isIn = k => { const s = extV(extEdges[k]); return s ? s.x < cX : true; };
       if (norm[i]===norm[j] && isIn(i)===isIn(j)) return 's';
       if (isIn(i) !== isIn(j)) {
         const inIdx = isIn(i) ? i : j, outIdx = isIn(i) ? j : i;
-        if (inIdx===0&&outIdx===2) return 't';  // TL↔TR same line
-        if (inIdx===1&&outIdx===3) return 't';  // BL↔BR same line
-        if (inIdx===0&&outIdx===3) return 'u';  // TL↔BR crossed
-        if (inIdx===1&&outIdx===2) return 'u';  // BL↔TR crossed
+        if (inIdx===0&&outIdx===2) return 't';
+        if (inIdx===1&&outIdx===3) return 't';
+        if (inIdx===0&&outIdx===3) return 'u';
+        if (inIdx===1&&outIdx===2) return 'u';
       }
       return null;
     };
@@ -2490,20 +2522,33 @@ function buildAmplitude() {
 
     extEdges.forEach(e => {
       const mom = extMom[e.id];
-      const fromIsExt = isExtV(vbl(e.from));
+      // Spinor assignment follows P&S, using POSITION + the VISUAL ARROW:
+      //   • IN/OUT from position: LEFT leg = incoming, RIGHT leg = outgoing.
+      //   • PARTICLE vs ANTIPARTICLE from the arrow's horizontal direction
+      //     (time flows left→right): arrow pointing RIGHT (with time) = particle;
+      //     arrow pointing LEFT (against time) = antiparticle.
+      //   ┌──────────────┬───────────┬──────────────┐
+      //   │ leg / arrow  │ → (right) │ ← (left)     │
+      //   ├──────────────┼───────────┼──────────────┤
+      //   │ LEFT  (in)   │  u        │  v̄  (anti)   │
+      //   │ RIGHT (out)  │  ū        │  v   (anti)  │
+      //   └──────────────┴───────────┴──────────────┘
+      const stub  = extStub(e);
+      const isLeft = stub ? stub.x < cX : true;       // left = incoming
+      const fV = vbl(e.from), tV = vbl(e.to);
+      // Visual arrow direction = from→to, flipped when reversed.
+      let arrowDx = (fV && tV) ? (tV.x - fV.x) : 0;
+      if (e.reversed) arrowDx = -arrowDx;
+      const isParticle = arrowDx >= 0;                 // arrow with time (rightward)
       let dirKey;
       if (e.type === 'fermion' || e.type === 'ghost') {
-        // reversed=true marks an antiparticle line — use v/v̄ instead of u/ū
-        if (e.reversed) {
-          dirKey = e.type + (fromIsExt ? '_anti_out' : '_anti_in');
-        } else {
-          dirKey = e.type + (fromIsExt ? '_in' : '_out');
-        }
+        if (isParticle) dirKey = e.type + (isLeft ? '_in' : '_out');        // u / ū
+        else            dirKey = e.type + (isLeft ? '_anti_out' : '_anti_in'); // v̄ / v
       } else {
         dirKey = e.type + '_in';
       }
       const er = feynmanRules.external[dirKey] || feynmanRules.external[e.type+'_in'];
-      const inout = dirKey.endsWith('_out') ? 'out' : 'in';
+      const inout = isLeft ? 'in' : 'out';   // physical, for the comment/parser
       const eli = extEdgeLrtz[e.id], idxSingle = eli !== undefined ? [eli] : [];
       if (er) {
         factors.push({ text: replLrtz(subExt(er.text, mom, false), idxSingle, false), latex: replLrtz(subExt(er.latex, mom, true), idxSingle, true), comment: `${e.type} ext ${inout} (${mom.text}${e.label ? ', '+e.label : ''})` });
@@ -2646,24 +2691,20 @@ function loadSample() {
 
   verts = [
     // Internal QED vertices
-    {id:1, x:cx-50, y:cy-75,  label:'e', style:'dot',  },  // vertex A (upper)
-    {id:2, x:cx-50, y:cy+75,  label:'e', style:'dot',  },  // vertex B (lower)
-    // External legs
-    {id:3, x:cx-200, y:cy-125, label:'γ₁', style:'none'},  // photon 1 in
-    {id:4, x:cx+125, y:cy-25,  label:'e⁻', style:'none'},  // electron out
-    {id:5, x:cx-200, y:cy+125, label:'γ₂', style:'none'},  // photon 2 in
-    {id:6, x:cx+125, y:cy+25,  label:'e⁺', style:'none'},  // positron out
+    {id:1, x:cx-50, y:cy-75,  label:'e', style:'dot'},  // vertex A (upper)
+    {id:2, x:cx-50, y:cy+75,  label:'e', style:'dot'},  // vertex B (lower)
+    // External stubs — labels blank, momentum labels added by iM ▶
+    {id:3, x:cx-200, y:cy-125, label:'', style:'none'},  // p₁: photon in  (TL)
+    {id:4, x:cx+125, y:cy-25,  label:'', style:'none'},  // p₃: electron out (TR)
+    {id:5, x:cx-200, y:cy+125, label:'', style:'none'},  // p₂: photon in  (BL)
+    {id:6, x:cx+125, y:cy+25,  label:'', style:'none'},  // p₄: positron out (BR)
   ];
   edges = [
-    // Internal fermion propagator (t-channel electron)
-    {id:7,  from:1, to:2, type:'fermion', label:'',   reversed:false, cx:0, cy:0},
-    // Photon legs (incoming)
-    {id:8,  from:3, to:1, type:'photon',  label:'k₁', reversed:false, cx:0, cy:0},
-    {id:9,  from:5, to:2, type:'photon',  label:'k₂', reversed:false, cx:0, cy:0},
-    // Electron out (no reversal — standard outgoing e⁻, ū spinor)
-    {id:10, from:1, to:4, type:'fermion', label:'p₃', reversed:false, cx:0, cy:0},
-    // Positron out (reversed — outgoing e⁺, v spinor; arrow points inward toward vertex)
-    {id:11, from:2, to:6, type:'fermion', label:'p₄', reversed:true,  cx:0, cy:0},
+    {id:7,  from:1, to:2, type:'fermion', label:'', reversed:false, cx:0, cy:0},  // fermion prop
+    {id:8,  from:3, to:1, type:'photon',  label:'', reversed:false, cx:0, cy:0},  // γ₁ in → vA
+    {id:9,  from:5, to:2, type:'photon',  label:'', reversed:false, cx:0, cy:0},  // γ₂ in → vB
+    {id:10, from:1, to:4, type:'fermion', label:'', reversed:false, cx:0, cy:0},  // e⁻ out (ū)
+    {id:11, from:2, to:6, type:'fermion', label:'', reversed:true,  cx:0, cy:0},  // e⁺ out (v)
   ];
   nextId = 15;
 }

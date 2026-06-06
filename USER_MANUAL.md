@@ -104,23 +104,26 @@ iM =
 
 ### Momentum labelling
 
-Legs are numbered **counter-clockwise from the top-left**:
+Time flows left to right. Legs are sorted top-to-bottom within each side:
 
 ```
-  p₁ (TL) ──────────────── p₄ (TR)
-  p₂ (BL) ──────────────── p₃ (BR)
-  ← CCW going down left, across bottom, up right
+  p₁ (top-left)   ──────────────  p₃ (top-right)    ← final state
+  p₂ (bot-left)   ──────────────  p₄ (bot-right)    ← final state
+  ↑ initial state
 ```
+
+- **p₁, p₂** = initial state (left side, incoming), p₁ on top
+- **p₃, p₄** = final state (right side, outgoing), p₃ on top
 
 ### Mandelstam variables
 
 | Label | Definition | Diagram topology |
 |---|---|---|
-| s | (p₁+p₂)² | Both incoming legs meet at same vertex (annihilation) |
-| t | (p₁−p₄)² | TL↔TR: straight-through, same horizontal line |
-| u | (p₁−p₃)² | TL↔BR: crossed, lines switch sides |
+| s | (p₁+p₂)² | Both initial-state legs meet at same vertex (annihilation) |
+| t | (p₁−p₃)² | p₁↔p₃: same horizontal line (straight-through) |
+| u | (p₁−p₄)² | p₁↔p₄: opposite corners (lines cross) |
 
-**t vs u channel:** draw t-channel with fermion lines going straight through (TL→TR and BL→BR); draw u-channel with lines crossing (TL→BR and BL→TR). The editor distinguishes them automatically.
+**t vs u channel:** draw t-channel with fermion lines going straight through (p₁→p₃ top line, p₂→p₄ bottom line); draw u-channel with lines crossing (p₁→p₄, p₂→p₃). The editor distinguishes them automatically.
 
 ---
 

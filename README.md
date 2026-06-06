@@ -46,45 +46,42 @@ You will see:
 
 The editor uses the convention that **time flows left to right** (Griffiths / standard HEP convention):
 
-- **Left of the canvas** = initial state (incoming particles, p₁, p₂)
-- **Right of the canvas** = final state (outgoing particles, p₃, p₄)
+- **Left of the canvas** = initial state (incoming particles p₁, p₂)
+- **Right of the canvas** = final state (outgoing particles p₃, p₄)
 - **Propagators** run horizontally or diagonally between the two sides
 
-External leg momenta are numbered **counter-clockwise from the top-left corner**:
-
 ```
-  p₁ (top-left)  ────────────────  p₄ (top-right)
-                                           ↑
-       ←  counter-clockwise         (CCW direction)
-                                           ↓
-  p₂ (bot-left)  ────────────────  p₃ (bot-right)
+  p₁ (top-left)   ────  initial state  ────  p₃ (top-right)
+  p₂ (bot-left)   ────                 ────  p₄ (bot-right)
+
+  time ────────────────────────────────────→
 ```
 
-- **p₁, p₂** = incoming legs (left side, going down: top-left first)
-- **p₃, p₄** = outgoing legs (right side, going up: bottom-right first)
+- **p₁, p₂** = initial state, incoming (left side, top-to-bottom)
+- **p₃, p₄** = final state, outgoing (right side, top-to-bottom)
 
-The Mandelstam variables are then:
+The Mandelstam variables follow the standard P&S definition:
 
-| Variable | Definition | Propagator in |
+| Variable | Definition | Channel |
 |---|---|---|
-| s = (p₁+p₂)² | total CoM energy squared | s-channel (both left legs meet at one vertex) |
-| t = (p₁−p₄)² | momentum transfer, same-line | t-channel (TL→TR straight-through, no crossing) |
-| u = (p₁−p₃)² | momentum transfer, crossed | u-channel (TL→BR diagonal, lines cross) |
+| s = (p₁+p₂)² | total CoM energy squared | s-channel — both initial-state legs meet at one vertex |
+| t = (p₁−p₃)² | momentum transfer, same line | t-channel — p₁ and p₃ on same horizontal line (no crossing) |
+| u = (p₁−p₄)² | momentum transfer, crossed | u-channel — p₁ and p₄ on opposite corners (lines cross) |
 
 **Example — s, t, u channels (time flows →):**
 
 ```
 s-channel:              t-channel:              u-channel:
 
-p₁→\                   p₁→[A]→p₄              p₁→[A]→p₃  (crosses to BR!)
+p₁→\                   p₁→[A]→p₃              p₁→[A]→p₄  (crosses to BR!)
     [A]                      |                       |
      |  (γ*)                (γ*)                   (γ*)
     [B]                      |                       |
-p₂→/                   p₂→[B]→p₃              p₂→[B]→p₄  (crosses to TR!)
+p₂→/                   p₂→[B]→p₄              p₂→[B]→p₃  (crosses to TR!)
    ↓                         ↓                       ↓
-  p₃,p₄                   p₁-p₄=t                p₁-p₃=u
+  p₃,p₄               Photon: p₁−p₃=t         Photon: p₁−p₄=u
 
-Photon: p₁+p₂=s        Photon: p₁−p₄=t         Photon: p₁−p₃=u
+Photon: p₁+p₂=s
 ```
 
 The editor automatically assigns the correct Mandelstam label based on which external legs connect to each vertex.

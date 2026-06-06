@@ -183,8 +183,13 @@ function normalizeInput(s) {
   s = s.replace(/²/g,'2').replace(/⁴/g,'4');
   // Unicode operators
   s = s.replace(/×/g,'*').replace(/÷/g,'/');
-  // Slashed momenta: /p1, ṗ1, p̸1 → p1
-  s = s.replace(/[\/]p(\d)/g,'p$1').replace(/[ṗp̸](\d)/g,'p$1');
+  // Strip Feynman-slash notation:
+  //  - combining slash overlay U+0338 (p̸ = p + U+0338) → remove the overlay
+  //  - combining dot U+0307 (ṗ) → remove
+  //  - leading forward-slash:  /p1 → p1
+  s = s.replace(/[̸̇]/g, '');
+  s = s.replace(/\/\s*p(\d)/gi, 'p$1');
+  s = s.replace(/\/\s*(ℓ|l)/gi, 'ℓ');   // /ℓ → ℓ (loop momentum)
   // γ^μ/γ_μ style → gm; γ^ν → gn; γ^ρ → gr; etc.
   const gMap = {'μ':'m','ν':'n','ρ':'r','σ':'s','α':'a','β':'b','κ':'k'};
   s = s.replace(/γ[\^_]\{?([μνρσαβκ])\}?/g, (_,c)=>'g'+(gMap[c]||c));
@@ -204,17 +209,29 @@ function normalizeInput(s) {
 
 // ─── Parser ───────────────────────────────────────────────────────────────────
 function parseChain(str) {
-  return str.trim().split(/\s+/).map(tok => {
+  // Tokenize: split on whitespace first; if a "token" is a run of concatenated
+  // elements (e.g. "p1gmp2gn" from unicode input with no spaces), break it apart.
+  const rawToks = str.trim().split(/\s+/).filter(Boolean);
+  const toks = [];
+  rawToks.forEach(t => {
+    if (/^\(/.test(t)) { toks.push(t); return; }  // keep parenthesised groups whole
+    // Greedily pull off: momenta (p1,k2), gammas (gm,g5), bare mass (m)
+    let s = t;
+    const re = /\(p\d+[+-](?:p\d+|m)\)|p\d+|k\d*|g[a-z0-9]|m/gi;
+    let m, consumed = 0, found = [];
+    while ((m = re.exec(s)) !== null) { found.push(m[0]); consumed += m[0].length; }
+    if (consumed === s.length && found.length) found.forEach(f => toks.push(f));
+    else toks.push(t);  // couldn't fully tokenize — keep as-is
+  });
+  return toks.map(tok => {
     tok=tok.trim(); if(!tok) return null;
     if (/^(p|k)\d*$/i.test(tok)) return {type:'mom', id:tok.toLowerCase()};
-    if (/^g[a-z]$/i.test(tok)) return {type:'gamma', idx:tok[1]};
+    if (/^g[a-z0-9]$/i.test(tok)) return {type:'gamma', idx:tok[1]};
     if (/^\([^)]+\)$/.test(tok)) {
       const inner=tok.slice(1,-1).trim();
-      // (p1+m) or (p1-m) — mass insertion
       const mm = inner.match(/^(p\d+|k\d*)\s*([+-])\s*m$/i);
       if (mm) return {type:'mom_mass', id:mm[1].toLowerCase(), msign: mm[2]==='+'?1:-1};
-      // sum of momenta: (p1+k)
-      const parts=inner.split(/\s*\+\s*/).map(s=>s.trim()).filter(Boolean);
+      const parts=inner.split(/\s*[+]\s*/).map(s=>s.trim()).filter(Boolean);
       return {type:'sum', parts};
     }
     if (tok==='m') return {type:'mass'};
@@ -2009,8 +2026,16 @@ function stepsSquareYukawa(text) {
 }
 
 function stepsFromMathIM(text) {
+  // If the expression already contains explicit Tr[...] blocks, evaluate them
+  // directly with the proven trace evaluator (handles any trace length).
+  if (/Tr\s*\[/i.test(text)) {
+    const body = text.replace(/^iM\s*=\s*/i, '').trim();
+    return dispatchTraceExpr(body);
+  }
+
   const {nVert, nFermExt, nPhotExt, nPhotProp, nFermProp, nLoops,
-         nScalarProp, nScalarExt, photPropNorm, scalarPropNorm, fermExts} = parseMathExpression(text);
+         nScalarProp, nScalarExt, nMetricVert, nTripleGaugeVert,
+         photPropNorm, scalarPropNorm, fermExts} = parseMathExpression(text);
 
   // ── Loop amplitude ──────────────────────────────────────────────────────────
   if (nLoops >= 1) {
@@ -2269,12 +2294,12 @@ function stepsSquareTwoCurrent(topo, text, iMDisplay) {
     {title:'Write iM in factored form',
      rule:`Chain 1: ū(${pB})γ<sup>μ</sup>u(${pA}) &nbsp;|&nbsp; Chain 2: ū(${pD})γ<sub>μ</sub>u(${pC})<br>
        The propagator label tells us which momenta share a fermion chain.`,
-     expr:`iM = ${fr(coupHTML+'²', MV(denom))} × [ū(${pB})${gmu('μ')}u(${pA})] × [ū(${pD})${G('γ')}<sub>μ</sub>u(${pC})]`,
+     expr:`iM = ${FR(coupHTML+'²', MV(denom))} × [ū(${pB})${gmu('μ')}u(${pA})] × [ū(${pD})${G('γ')}<sub>μ</sub>u(${pC})]`,
      expl:`The virtual ${cType} propagator index μ contracts the two fermion bilinears.`},
 
     {title:'Square: |iM|² = iM × (iM)*',
      rule:`<strong>Conjugate:</strong> (ūΓu)* = ūΓu (γ<sup>μ</sup> Hermitian → Γ̄=γ<sup>μ</sup>). A second free index ν emerges.`,
-     expr:`|iM|² = ${fr(coupHTML+'⁴', MV(denom)+'²')} × [ū(${pB})${gmu('μ')}u(${pA})][ū(${pA})${gmu('ν')}u(${pB})] × [ū(${pD})${G('γ')}<sub>μ</sub>u(${pC})][ū(${pC})${G('γ')}<sub>ν</sub>u(${pD})]`,
+     expr:`|iM|² = ${FR(coupHTML+'⁴', MV(denom)+'²')} × [ū(${pB})${gmu('μ')}u(${pA})][ū(${pA})${gmu('ν')}u(${pB})] × [ū(${pD})${G('γ')}<sub>μ</sub>u(${pC})][ū(${pC})${G('γ')}<sub>ν</sub>u(${pD})]`,
      expl:`The μ,ν pair contracts between the two traces after spin sums.`},
 
     {title:'Apply spin completeness — close into traces',
@@ -3327,6 +3352,22 @@ function setSign(s) {
   document.getElementById('sign-plus').classList.toggle('active',  s > 0);
 }
 
+// ─── Trace-expression dispatcher ──────────────────────────────────────────────
+// Parses any expression containing Tr[...] or spinor bilinears and routes to the
+// proven trace evaluator. Reused by both go() and stepsFromMathIM.
+function dispatchTraceExpr(raw) {
+  const parsed = parseInput(raw);
+  const pat = identify(parsed);
+  pat.scalar = parsed.scalar;
+  if (pat.type==='err_same_index')      return stepsErrSameIndex(parsed,pat);
+  if (pat.type==='double4')             return stepsDouble4(parsed,pat);
+  if (pat.type==='single_internal')     return stepsSingleInternal(parsed,pat);
+  if (pat.type==='two_mom')             return stepsTwoMom(parsed,pat);
+  if (pat.type==='single4')             return stepsSingle4(parsed,pat);
+  if (pat.type==='spinor')              return stepsSpinor(parsed,pat);
+  return stepsUnknown(parsed);
+}
+
 // ─── Main solver ──────────────────────────────────────────────────────────────
 function go() {
   const raw = document.getElementById('amp-input').value.trim();
@@ -3368,19 +3409,7 @@ function go() {
     showAll(); return;
   }
 
-  const parsed = parseInput(raw);
-  const pat = identify(parsed);
-  pat.scalar = parsed.scalar;
-
-  let res;
-  if (pat.type==='err_same_index') res=stepsErrSameIndex(parsed,pat);
-  else if (pat.type==='double4') res=stepsDouble4(parsed,pat);
-  else if (pat.type==='single_internal') res=stepsSingleInternal(parsed,pat);
-  else if (pat.type==='two_mom') res=stepsTwoMom(parsed,pat);
-  else if (pat.type==='single4') res=stepsSingle4(parsed,pat);
-  else if (pat.type==='spinor') res=stepsSpinor(parsed,pat);
-  else res=stepsUnknown(parsed);
-
+  const res = dispatchTraceExpr(raw);
   STEPS = res.steps; LATEX = res.latex;
   showAll();
 }
