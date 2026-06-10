@@ -2699,7 +2699,7 @@ document.getElementById('btn-to-stepper').addEventListener('click', () => {
     diagrams,                       // array — the stepper sums these
     iM: combinedIM,                 // combined display string
     comments: diagrams[0].comments, // first diagram's comments (legacy single-diagram path)
-    latex: latexAmplitude, timestamp: Date.now()
+    latex: latexAmplitude, d: spacetimeDim, timestamp: Date.now()
   }));
   const btn = document.getElementById('btn-to-stepper');
   const orig = btn.textContent;

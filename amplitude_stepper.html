@@ -54,6 +54,11 @@
   <div class="sep"></div>
   <button id="btn-copy">Copy LaTeX</button>
   <button onclick="toggleSyntax()" style="font-size:11px">Syntax ?</button>
+  <div class="sep"></div>
+  <span style="font-size:10px;color:#404060" title="Spacetime dimension d used in the trace algebra (g^μ_μ=d, γ^μγ_μ=d). Default 4.">dim&nbsp;d</span>
+  <input id="inp-dim" type="number" value="4" min="1" max="12" step="1"
+    style="width:42px;background:#0c0c18;border:1px solid #2a2a44;color:#90c8f0;font-family:inherit;font-size:11px;padding:2px 4px;border-radius:3px"
+    title="Spacetime dimension d. Changing it alters traces: γ^μγ_μ=d, the (d−4) dim-reg term, etc. Re-run to apply.">
 </div>
 
 <style>
@@ -337,13 +342,19 @@ function getMsign(momEl) {
   return momEl.type==='mom_mass' ? momEl.msign : 0;
 }
 
-// Evaluate 32[(A·C)(B·D) + (A·D)(B·C)] into simplified Mandelstam
+// Tr[A̸γ^μB̸γ^ν]·Tr[C̸γ_μD̸γ_ν] in d spacetime dimensions:
+//   = 32[(A·C)(B·D)+(A·D)(B·C)] + 16(d−4)(A·B)(C·D)
+// The (d−4) term vanishes in d=4 and is the dimensional-regularisation correction.
 function evalDoubleTrace(A, B, C, D) {
   // A,B,C,D are momentum ids (strings like 'p1')
   const ac=dpHTML(A,C), bd=dpHTML(B,D), ad=dpHTML(A,D), bc=dpHTML(B,C);
+  const ab=dpHTML(A,B), cd=dpHTML(C,D);
+  const dEps = DIM - 4;
   // Step showing the dot products
-  const step3html = `32·[${dotP(A,C)}·${dotP(B,D)} + ${dotP(A,D)}·${dotP(B,C)}]`;
-  const step4html = `32·[(${ac.html})(${bd.html}) + (${ad.html})(${bc.html})]`;
+  const step3html = `32·[${dotP(A,C)}·${dotP(B,D)} + ${dotP(A,D)}·${dotP(B,C)}]`
+    + (dEps!==0 ? ` + 16(d−4)·${dotP(A,B)}·${dotP(C,D)}` : '');
+  const step4html = `32·[(${ac.html})(${bd.html}) + (${ad.html})(${bc.html})]`
+    + (dEps!==0 ? ` + 16(d−4)(${ab.html})(${cd.html})` : '');
 
   let final = null;
   if (ac.mand&&bd.mand&&ad.mand&&bc.mand) {
@@ -351,16 +362,26 @@ function evalDoubleTrace(A, B, C, D) {
     const t1 = {sign: ac.sign*bd.sign, mands:[ac.mand,bd.mand].sort().join('')};
     const t2 = {sign: ad.sign*bc.sign, mands:[ad.mand,bc.mand].sort().join('')};
     // 32 × term/4 = 8 × term
-    function mandHTML(sign, mands) {
+    function mandHTML(mands) {
       const chars=[...mands]; // e.g. ['s','t'] or ['s','s']
       if (chars[0]===chars[1]) return MV(chars[0])+'²';
       return MV(chars[0])+'·'+MV(chars[1]);
     }
-    const t1h = mandHTML(1,t1.mands), t2h = mandHTML(1,t2.mands);
+    const t1h = mandHTML(t1.mands), t2h = mandHTML(t2.mands);
     const s1 = t1.sign>0?'':'−', s2 = t2.sign>0?'+':'−';
-    final = `8(${s1}${t1h}${s2}${t2h})`;
-    // If both same term → simplify further
-    if (t1.mands===t2.mands) {
+    // Dimensional-regularisation correction: +16(d−4)(A·B)(C·D).
+    // Factor out the overall 8 so it stays in clean "8(…)" form:
+    //   32[…] + 16(d−4)(A·B)(C·D) = 8( […]/… + (d−4)/2·(A·B-mand)(C·D-mand) )
+    const fmtHalf = x => { const a=Math.abs(x); if(a===1)return ''; if(a===0.5)return '½'; return Number.isInteger(a)?`${a}`:`${a*2}/2`; };
+    let corr = '';
+    if (dEps!==0 && ab.mand && cd.mand) {
+      const cInside = (dEps/2) * (ab.sign*cd.sign);   // coefficient inside the 8(…)
+      const mh = mandHTML([ab.mand,cd.mand].sort().join(''));
+      if (cInside!==0) corr = ` ${cInside>0?'+':'−'} ${fmtHalf(cInside)}${mh}`;
+    }
+    final = `8(${s1}${t1h}${s2}${t2h}${corr})`;
+    // If both Mandelstam terms are identical AND no d-correction → simplify further
+    if (t1.mands===t2.mands && !corr) {
       const coeff = 8*(t1.sign+t2.sign);
       final = coeff===0 ? '0' : `${Math.abs(coeff)}·${t1h}`;
     }
@@ -1007,6 +1028,11 @@ function stepsSquareScalar(text, nVert, nScalarProp, nScalarExt, scalarPropNorm)
 //   c:     numeric coefficient
 //   pairs: [[a,b],...] product of dot products p_a·p_b
 //   free:  [[μ,ν],...] remaining free metric tensors g^{μν} (need contracting)
+// Spacetime dimension d used by the trace algebra. NOTE: this is the SPACETIME
+// dimension that appears in metric contractions g^μ_μ = d, γ^μγ_μ = d,
+// γ^μ p̸ γ_μ = (2−d)p̸. It is NOT the Dirac trace normalisation Tr[1], which is
+// kept = 4 (conventional dimensional regularisation). Default 4 = 3 space + 1 time.
+let DIM = 4;
 function S0()              { return []; }
 function S1(n)             { return n===0?[]:[{c:n,pairs:[],free:[]}]; }
 function Sadd(a,b)         { return [...a,...b]; }
@@ -1022,7 +1048,7 @@ function Sprod(ts,us)      {
 function wickPair(A, B) {
   if (A.t==='slash' && B.t==='slash') return SpairMul(S1(1), A.mom, B.mom);
   if (A.t==='gamma' && B.t==='gamma') {
-    if (A.idx===B.idx) return S1(4);           // g^{μμ} = d = 4
+    if (A.idx===B.idx) return S1(DIM);         // g^{μ}_{μ} = d (spacetime dimension)
     return SfreeMul(S1(1), A.idx, B.idx);      // g^{μν} symbolic
   }
   if (A.t==='gamma' && B.t==='slash') return SfreeMul(S1(1), A.idx, 'p:'+B.mom);
@@ -1088,7 +1114,7 @@ function resolveMomComps(terms) {
 
 // Contract a free index pair with the metric −g_{μν} (polarisation sum or
 // propagator metric). Finds free entries carrying μ and ν and joins them.
-//   −g_{μν} g^{μν}      = −d = −4
+//   −g_{μν} g^{μν}      = −d         (spacetime dimension)
 //   −g_{μν} g^{μX}g^{νY} = −g^{XY}
 function contractPolPair(terms, mu, nu) {
   return terms.flatMap(t => {
@@ -1096,12 +1122,12 @@ function contractPolPair(terms, mu, nu) {
     const iMu = free.findIndex(([a,b]) => a===mu||b===mu);
     if (iMu < 0) return [t];
     const iNu = free.findIndex(([a,b],i) => i!==iMu && (a===nu||b===nu));
-    // Both μ and ν in the SAME entry [μ,ν] → −g_{μν}g^{μν} = −4
+    // Both μ and ν in the SAME entry [μ,ν] → −g_{μν}g^{μν} = −d
     if (iNu < 0) {
       const e = free[iMu];
       if ((e[0]===mu&&e[1]===nu)||(e[0]===nu&&e[1]===mu)) {
         const rest = free.filter((_,i)=>i!==iMu);
-        return [{...t, c:-4*t.c, free:rest}];
+        return [{...t, c:-DIM*t.c, free:rest}];
       }
       return [t]; // ν not found anywhere → leave
     }
@@ -1109,7 +1135,7 @@ function contractPolPair(terms, mu, nu) {
     const [ma,mb] = free[iMu]; const X = ma===mu?mb:ma;
     const [na,nb] = free[iNu]; const Y = na===nu?nb:na;
     const rest = free.filter((_,i)=>i!==iMu && i!==iNu);
-    if (X===Y) return [{...t, c:-4*t.c, free:rest}];     // −g^{XX}=−d=−4
+    if (X===Y) return [{...t, c:-DIM*t.c, free:rest}];    // −g^{XX}=−d
     return [{...t, c:-t.c, free:[...rest,[X,Y]]}];
   });
 }
@@ -3485,6 +3511,10 @@ function iMDiagramToTrace(comments) {
 function go() {
   const raw = document.getElementById('amp-input').value.trim();
   if (!raw) return;
+  // Read the spacetime dimension d — used by the trace algebra (Wick engine,
+  // double-trace). Default 4. Changing it alters γ^μγ_μ=d and the (d−4) term.
+  const dEl = document.getElementById('inp-dim');
+  DIM = dEl ? (parseInt(dEl.value,10) || 4) : 4;
 
   // Two-diagram mode
   if (twoMode) {
@@ -3630,12 +3660,18 @@ function eg(name) {
 document.getElementById('amp-input').addEventListener('keydown', e=>{
   if (e.ctrlKey&&e.key==='Enter'){ e.preventDefault(); go(); }
 });
+// Re-solve when the spacetime dimension changes, so d-dependence shows live.
+document.getElementById('inp-dim').addEventListener('input', () => {
+  if (document.getElementById('amp-input').value.trim()) go();
+});
 
 function importFromEditor() {
   const raw = localStorage.getItem('feynman_iM_export');
   if (!raw) { alert('Nothing exported yet. In feynman_editor.html: draw a diagram → click iM ▶ → click → Stepper.'); return; }
   const data = JSON.parse(raw);
   const ago = Math.round((Date.now() - data.timestamp) / 1000);
+  // Adopt the spacetime dimension the editor was using.
+  if (data.d) { const di=document.getElementById('inp-dim'); if (di) di.value = data.d; DIM = data.d; }
 
   // ── Multiple diagrams (M = M₁ + M₂ + …) → use two-diagram mode ─────────────
   // Two separate connected components on the editor canvas are two diagrams that
